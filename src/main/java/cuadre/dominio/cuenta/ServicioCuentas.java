@@ -62,6 +62,10 @@ public class ServicioCuentas {
         });
     }
 
+    public Cuenta consultar(String cuentaId) {
+        return exigirCliente(banco.leer(libro -> libro.cuenta(cuentaId)));
+    }
+
     public Operacion depositar(String cuentaId, Dinero monto) {
         exigirPositivo(monto);
         return banco.enTransaccion(libro -> {
@@ -154,7 +158,12 @@ public class ServicioCuentas {
         }
     }
 
+    /**
+     * Busca una operación previa con la misma clave. Primero bloquea las cuentas: así dos reintentos simultáneos
+     * se ordenan y el segundo ve la operación que confirmó el primero.
+     */
     protected Optional<Operacion> reintento(Libro libro, SolicitudTransferencia s) {
+        libro.bloquear(List.of(s.origen(), s.destino()));
         Optional<Operacion> previa = libro.operacionPorClave(s.clave(), ahora().minus(ventanaIdempotencia));
         previa.filter(op -> !op.huella().equals(s.huella())).ifPresent(op -> {
             throw new OperacionRechazada(Motivo.CLAVE_REUTILIZADA,
@@ -193,10 +202,10 @@ public class ServicioCuentas {
         SolicitudTransferencia s = plan.solicitud();
         Operacion op = new Operacion(UUID.randomUUID(), TipoOperacion.TRANSFERENCIA, s.clave(), s.huella(), plan.fecha(),
                 List.of(plan.debito(), plan.credito()), null, false);
+        libro.guardar(op);
         if (!libro.reservarClave(s.clave(), op.id(), op.fecha(), op.fecha().minus(ventanaIdempotencia))) {
             throw new OperacionRechazada(Motivo.CLAVE_REUTILIZADA, "La clave " + s.clave() + " está en uso por otra transferencia");
         }
-        libro.guardar(op);
         return op;
     }
 

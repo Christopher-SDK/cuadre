@@ -1,5 +1,7 @@
 package cuadre.mutantes;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import cuadre.adaptador.persistencia.BancoPostgres;
 import cuadre.dominio.credito.CalculadoraFrancesa;
 import cuadre.dominio.credito.ServicioCreditos;
 import cuadre.dominio.cuenta.ServicioCuentas;
@@ -7,6 +9,7 @@ import cuadre.dominio.falla.PuntoDeFalla;
 import cuadre.dominio.impuesto.ReglaItf;
 import cuadre.dominio.libro.Banco;
 
+import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
@@ -32,6 +35,10 @@ public final class Ensamble {
     }
 
     private Ensamble() {
+    }
+
+    public static Banco bancoPostgres(Bug bug, DataSource dataSource, ObjectMapper json) {
+        return bug == Bug.CARRERA ? new LecturaSinBloqueo(dataSource, json) : new BancoPostgres(dataSource, json);
     }
 
     public static ServicioCuentas cuentas(Bug bug, Banco banco, Parametros p, Clock reloj, PuntoDeFalla falla) {
