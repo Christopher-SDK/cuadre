@@ -163,8 +163,8 @@ class CuentasPropiedades {
 
         s.cuentas.transferir(new SolicitudTransferencia("t", a, b, centimos(monto)));
 
-        assertThat(s.saldo(b) - antesB).as("lo que recibe el destino").isEqualTo(monto);
-        assertThat(s.itfRecaudado() - antesItf).as("ITF recaudado").isEqualTo(esperado);
-        assertThat(antesA - s.saldo(a)).as("lo que paga el origen").isEqualTo(monto + esperado);
+        assertThat(s.saldo(b) - antesB).as("lo que recibe el destino, en céntimos").isEqualTo(monto);
+        assertThat(s.itfRecaudado() - antesItf).as("ITF recaudado, en céntimos").isEqualTo(esperado);
+        assertThat(antesA - s.saldo(a)).as("lo que paga el origen, en céntimos").isEqualTo(monto + esperado);
     }
 }

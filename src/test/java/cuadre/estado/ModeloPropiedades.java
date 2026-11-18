@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Label("Modelo de referencia: el sistema se comporta igual que el modelo en cualquier secuencia")
 class ModeloPropiedades {
 
-    @Property(tries = 400)
+    @Property(tries = 1000)
     @Label("En memoria: cualquier secuencia de depósitos, retiros, transferencias, caídas, reintentos, reversos y pagos de crédito")
     void secuenciasEnMemoria(@ForAll("enMemoria") ActionChain<Mundo> cadena) {
         cadena.withInvariant("el auditor no encuentra descuadres", m -> assertThat(m.sistema.auditar()).isEmpty()).run();
@@ -66,7 +66,7 @@ class ModeloPropiedades {
                 .withAction(1, new Desembolsar())
                 .withAction(3, new PagarCuota())
                 .withAction(1, new Prepagar())
-                .withMaxTransformations(30);
+                .withMaxTransformations(20);
     }
 
     // ---------------------------------------------------------------- generadores comunes

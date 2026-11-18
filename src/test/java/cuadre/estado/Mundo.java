@@ -67,6 +67,8 @@ final class Mundo {
     /** El servidor cae a mitad de la transferencia: el cliente recibe un timeout y nada debe haber cambiado. */
     void transferirConCaida(String clave, int o, int d, long monto, String punto) {
         ultimaTransferencia = new SolicitudTransferencia(clave, cuentas.get(o), cuentas.get(d), centimos(monto));
+        sistema.reloj.avanzar(java.time.Duration.ofSeconds(1));
+        pasos++;
         sistema.falla.fallarUnaVezEn(punto);
         try {
             sistema.cuentas.transferir(ultimaTransferencia);
