@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  limpio:
+    name: Sistema limpio
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - name: Suite completa
+        run: |
+          inicio=$(date +%s)
+          ./mvnw -B verify
+          mkdir -p target/matriz/NINGUNO
+          echo $(( $(date +%s) - inicio )) > target/matriz/NINGUNO/segundos
+          cp target/surefire-reports/TEST-*.xml target/matriz/NINGUNO/
+      - name: Reporte Allure
+        if: always()
+        run: npx --yes allure-commandline@2.46.1 generate target/allure-results --clean -o target/allure-report
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: matriz-NINGUNO
+          path: target/matriz/NINGUNO
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: allure-report
+          path: target/allure-report
+
+  bug:
+    name: Bug ${{ matrix.bug }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        bug: [DOBLE_CARGO, CARRERA, REDONDEO, REVERSO_PARCIAL, IMPUESTO_DOBLE, CRONOGRAMA, TIMEOUT_A_MEDIAS]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - name: Suite completa con el bug activado
+        env:
+          CUADRE_BUG: ${{ matrix.bug }}
+        run: |
+          inicio=$(date +%s)
+          ./mvnw -B test -Dmaven.test.failure.ignore=true
+          mkdir -p target/matriz/$CUADRE_BUG
+          echo $(( $(date +%s) - inicio )) > target/matriz/$CUADRE_BUG/segundos
+          cp target/surefire-reports/TEST-*.xml target/matriz/$CUADRE_BUG/
+      - name: El bug debe ser detectado
+        run: |
+          if grep -qE '<(failure|error)' target/matriz/${{ matrix.bug }}/TEST-*.xml; then
+            echo "Detectado: $(grep -lE '<(failure|error)' target/matriz/${{ matrix.bug }}/TEST-*.xml | wc -l) clases de prueba fallaron"
+          else
+            echo "::error::El bug ${{ matrix.bug }} pasó sin ser detectado"; exit 1
+          fi
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: matriz-${{ matrix.bug }}
+          path: target/matriz/${{ matrix.bug }}
+
+  matriz:
+    name: Matriz de detección
+    needs: [limpio, bug]
+    if: always() && needs.limpio.result != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: matriz-*
+          path: target/descargas
+      - uses: actions/download-artifact@v8
+        with:
+          name: allure-report
+          path: sitio/allure
+      - name: Armar matriz
+        run: |
+          mkdir -p target/matriz
+          for d in target/descargas/matriz-*; do mv "$d" "target/matriz/${d##*/matriz-}"; done
+          python3 scripts/matriz.py target/matriz --json web/datos/matriz.json --con-allure
+          cat target/matriz/matriz.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Web con los datos de esta corrida
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+          mv ../sitio/allure dist/allure
+      - uses: actions/upload-pages-artifact@v5
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: web/dist
+
+  publicar:
+    name: Publicar en GitHub Pages
+    needs: matriz
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - id: despliegue
+        uses: actions/deploy-pages@v5
