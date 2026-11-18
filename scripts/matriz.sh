@@ -23,4 +23,4 @@ for bug in $BUGS; do
   echo "listo en $(cat "$destino/segundos") s"
 done
 
-python3 scripts/matriz.py target/matriz --pagina docs/matriz.js
+python3 scripts/matriz.py target/matriz --json web/datos/matriz.json

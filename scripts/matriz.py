@@ -19,43 +19,78 @@ BUGS = {
         "titulo": "Doble cargo en un reintento",
         "cliente": "Su app no recibió respuesta, reintentó la transferencia a los dos minutos y el banco le cobró dos veces.",
         "causa": "La ventana de idempotencia de 24 horas se convierte a milisegundos sin el factor 1000: dura 86,4 segundos.",
+        "clase": "src/main/java/cuadre/mutantes/VentanaDeReintentos.java",
+        "regla": "Idempotencia",
+        "caso": ["Ana tiene S/ 5 000,00 y transfiere S/ 2 000,00 a Beto con la clave «pago-alquiler».", "Su app no recibe la respuesta a tiempo.", "La app reintenta a los 87 segundos con la misma clave.", "La ventana de idempotencia, mal convertida, duró 86,4 segundos: el sistema no reconoce la clave y vuelve a transferir."],
+        "esperado": "Ana: S/ 2 999,90",
+        "obtenido": "Ana: S/ 999,80",
     },
     "CARRERA": {
         "titulo": "Carrera entre transferencias simultáneas",
         "cliente": "Dos pagos llegan al mismo tiempo y uno «pisa» al otro: el saldo que ve el cliente no coincide con sus movimientos.",
         "causa": "Se lee el saldo sin bloqueo y se escribe el valor calculado en Java (leer → modificar → escribir).",
+        "clase": "src/main/java/cuadre/mutantes/LecturaSinBloqueo.java",
+        "regla": "16 clientes transfiriéndose",
+        "caso": ["Tres cuentas empiezan con S/ 1 500,00 cada una.", "16 clientes lanzan a la vez 640 transferencias cruzadas entre ellas (semilla fija por repetición).", "Dos transacciones leen el mismo saldo sin bloqueo y cada una escribe el suyo: la segunda pisa a la primera.", "Al terminar, el auditor compara cada saldo con la suma de sus movimientos."],
+        "esperado": "Saldo = suma de sus movimientos",
+        "obtenido": "4 cuentas descuadradas",
     },
     "REDONDEO": {
         "titulo": "Interés truncado en vez de redondeado",
         "cliente": "El cronograma parece correcto y termina en cero, pero el interés de algunos meses queda un céntimo por debajo de lo pactado.",
         "causa": "Una «mejora» para no cobrar fracciones al cliente usa RoundingMode.DOWN en el interés mensual.",
+        "clase": "src/main/java/cuadre/mutantes/InteresSinCobroDeFracciones.java",
+        "regla": "Caso 2:",
+        "caso": ["Crédito de S/ 1 000,00 a 3 meses con TEM de 1 % exacto (caso dorado 2).", "Cuota 1: interés sobre S/ 1 000,00 = 10,00.", "Cuota 2: interés sobre S/ 669,98 = 6,6998, que se redondea al céntimo.", "El sistema trunca en lugar de redondear."],
+        "esperado": "Interés cuota 2: S/ 6,70",
+        "obtenido": "Interés cuota 2: S/ 6,69",
     },
     "REVERSO_PARCIAL": {
         "titulo": "Reverso que no devuelve el impuesto",
         "cliente": "Le anulan una transferencia hecha por error y le devuelven el monto, pero el ITF cobrado se queda en el banco.",
         "causa": "Alguien interpretó que «el ITF no es reembolsable» y excluyó del reverso las líneas del impuesto.",
+        "clase": "src/main/java/cuadre/mutantes/ReversoSinItf.java",
+        "regla": "Reverso:",
+        "caso": ["Ana tiene S/ 5 000,00 y transfiere S/ 2 000,00 a Beto; paga S/ 0,10 de ITF.", "Ana pide anular la transferencia hecha por error.", "El reverso devuelve los S/ 2 000,00 pero omite las líneas del impuesto."],
+        "esperado": "Ana: S/ 5 000,00",
+        "obtenido": "Ana: S/ 4 999,90",
     },
     "IMPUESTO_DOBLE": {
         "titulo": "ITF cobrado a ambos lados",
         "cliente": "Le envían S/ 2 000 y recibe S/ 1 999,90: al que recibe también le descontaron el impuesto.",
         "causa": "La regla «el ITF grava débitos y créditos» se aplicó al pie de la letra en una transferencia interna.",
+        "clase": "src/main/java/cuadre/mutantes/ItfSobreDebitosYCreditos.java",
+        "regla": "cobra el ITF una sola vez",
+        "caso": ["Ana transfiere S/ 2 000,00 a Beto.", "El sistema cobra el ITF a Ana: S/ 0,10.", "Y también se lo cobra a Beto al acreditarle."],
+        "esperado": "Beto: S/ 2 000,00",
+        "obtenido": "Beto: S/ 1 999,90",
     },
     "CRONOGRAMA": {
         "titulo": "Última cuota sin ajustar",
         "cliente": "Paga todas sus cuotas y el sistema sigue mostrándole una deuda (o un saldo a favor) de unos céntimos.",
         "causa": "La última cuota se calcula igual que las demás y no absorbe los céntimos que dejó el redondeo.",
+        "clase": "src/main/java/cuadre/mutantes/CuotaFijaHastaElFinal.java",
+        "regla": "Caso 1:",
+        "caso": ["Crédito de S/ 10 000,00 a 12 meses sin interés (caso dorado 1).", "Cuota base: 10 000 / 12 = 833,33. Las 11 primeras amortizan S/ 9 166,63.", "Quedan S/ 833,37, pero la cuota 12 vuelve a ser de 833,33."],
+        "esperado": "Saldo final: S/ 0,00",
+        "obtenido": "Saldo final: S/ 0,04",
     },
     "TIMEOUT_A_MEDIAS": {
         "titulo": "Timeout entre débito y crédito",
         "cliente": "El servidor cae a mitad de la transferencia: el dinero sale de su cuenta y no llega a ninguna; al reintentar, se lo cobran otra vez.",
         "causa": "La transferencia se partió en dos transacciones para liberar antes el bloqueo de la cuenta origen.",
+        "clase": "src/main/java/cuadre/mutantes/TransferenciaEnDosTramos.java",
+        "regla": "El libro mayor siempre cuadra",
+        "caso": ["Ana tiene S/ 5 000,00 y transfiere S/ 2 000,00 a Beto.", "Se confirma el débito: el dinero pasa de Ana a la cuenta puente.", "El servidor cae antes del crédito."],
+        "esperado": "Cuenta puente: S/ 0,00",
+        "obtenido": "Cuenta puente: S/ 2 000,00",
     },
 }
 
 CAPAS = [
-    ("concurrencia", "Concurrencia"), ("estado", "Modelo de referencia"), ("oraculo", "Oráculo financiero"),
-    ("credito", "Propiedades de crédito"), ("propiedades", "Invariantes"), ("api", "API"), ("unitario", "Unitarias"),
-    ("arquitectura", "Arquitectura"),
+    ("unitario", "Unitarias"), ("propiedades", "Invariantes"), ("credito", "Propiedades de crédito"),
+    ("estado", "Modelo de referencia"), ("concurrencia", "Concurrencia"), ("oraculo", "Oráculo financiero"),
+    ("api", "API"), ("arquitectura", "Arquitectura"),
 ]
 
 
@@ -135,7 +170,7 @@ def leer_corrida(carpeta):
             reporte = reporte_de(bloques, caso.get("name")) or (caso.findtext("system-out") or "")
             caso_reducido, pasos, tipo = caso_minimo(mensaje, reporte)
             fallas.append({
-                "prueba": caso.get("name"),
+                "prueba": re.sub(r" (repetición \d+ de \d+)$", r" · \1", caso.get("name") or ""),
                 "grupo": raiz.get("name").split(".")[-1],
                 "capa": capa(raiz.get("name")),
                 "segundos": round(float(caso.get("time") or 0), 3),
@@ -158,6 +193,8 @@ def main():
     args = argparse.ArgumentParser()
     args.add_argument("carpeta", type=Path)
     args.add_argument("--pagina", type=Path)
+    args.add_argument("--con-allure", action="store_true", help="el sitio publicado incluye el reporte Allure")
+    args.add_argument("--json", type=Path, help="copia de matriz.json para el generador de la web")
     opciones = args.parse_args()
 
     corridas = {c.name: leer_corrida(c) for c in sorted(opciones.carpeta.iterdir()) if c.is_dir()}
@@ -172,10 +209,17 @@ def main():
             continue
         fallas = sorted(corrida["fallas"], key=lambda f: f["segundos"])
         primera = fallas[0] if fallas else None
-        # El caso mínimo que se muestra: primero una secuencia reducida del modelo (cuenta la historia completa),
+        # la regla que se cuenta es la que ilustra el caso de negocio, si está entre las que fallaron
+        regla = next((f for f in fallas if meta.get("regla") and meta["regla"] in f["prueba"]), primera)
+        # El caso mínimo que se muestra: primero una secuencia corta del modelo (cuenta la historia completa),
         # luego un ejemplo reducido por jqwik, luego una aserción descrita ("[…]"); dentro de cada grupo, el más corto.
-        orden = {"cadena": 0, "ejemplo": 1, "mensaje": 2}
-        candidatos = sorted(fallas, key=lambda f: (orden[f["tipoCaso"]], not f["casoMinimo"].startswith("["),
+        # Una cadena larga (sin reducir) se lee peor que un ejemplo reducido, así que va después de él.
+        def prioridad(f):
+            if f["tipoCaso"] == "cadena":
+                return 0 if f["pasos"] <= 8 else 2
+            return 1 if f["tipoCaso"] == "ejemplo" else 3
+
+        candidatos = sorted(fallas, key=lambda f: (prioridad(f), not f["casoMinimo"].startswith("["),
                                                    f["pasos"], len(f["casoMinimo"])))
         minimo = candidatos[0] if candidatos else None
         filas.append({
@@ -188,7 +232,10 @@ def main():
             "segundosSuite": corrida["segundosSuite"],
             "casoMinimo": minimo["casoMinimo"] if minimo else None,
             "casoMinimoDe": minimo["prueba"] if minimo else None,
-            "reglaQueLoAtrapo": primera["prueba"] if primera else None,
+            "primeraEnFallar": primera["prueba"] if primera else None,
+            "reglaQueLoAtrapo": regla["prueba"] if regla else None,
+            "capaDeLaRegla": regla["capa"] if regla else None,
+            "segundosDeLaRegla": regla["segundos"] if regla else None,
             "semilla": minimo["semilla"] if minimo else None,
         })
 
@@ -200,6 +247,7 @@ def main():
             "detalle": [f["grupo"] + " · " + f["prueba"] for f in limpio["fallas"]],
         },
         "puntaje": {"detectados": detectados, "total": len(filas)},
+        "allure": opciones.con_allure,
         "bugs": filas,
     }
 
@@ -209,7 +257,7 @@ def main():
               "|---|---|---|---|---|---|"]
     for f in filas:
         caso = (f["casoMinimo"] or "—").replace("\n", "<br>").replace("|", "\\|")
-        lineas.append(f"| `{f['bug']}` | {'✅ sí' if f['detectado'] else '❌ no'} | {f['reglaQueLoAtrapo'] or '—'} "
+        lineas.append(f"| `{f['bug']}` | {'✅ sí' if f['detectado'] else '❌ no'} | {f['primeraEnFallar'] or '—'} "
                       f"| {len(f['detectadoPor'])} ({', '.join(f['capas'])}) "
                       f"| {f['segundosHastaDetectar'] if f['segundosHastaDetectar'] is not None else '—'} s | {caso} |")
     tabla = "\n".join(lineas)
@@ -217,6 +265,10 @@ def main():
     if limpio is not None:
         puntaje += f" · sistema limpio: {limpio['pruebas']} pruebas, {len(limpio['fallas'])} fallas"
     (opciones.carpeta / "matriz.md").write_text(puntaje + "\n\n" + tabla + "\n", encoding="utf-8")
+
+    if opciones.json:
+        opciones.json.parent.mkdir(parents=True, exist_ok=True)
+        opciones.json.write_text(json.dumps(resultado, ensure_ascii=False, indent=2), encoding="utf-8")
 
     if opciones.pagina:
         opciones.pagina.parent.mkdir(parents=True, exist_ok=True)
@@ -226,7 +278,7 @@ def main():
     print()
     for f in filas:
         print(f"{'✅' if f['detectado'] else '❌'} {f['bug']:<18} {len(f['detectadoPor']):>3} pruebas lo detectan "
-              f"· la más rápida: {f['reglaQueLoAtrapo'] or '—'} ({f['segundosHastaDetectar']} s)")
+              f"· la más rápida: {f['primeraEnFallar'] or '—'} ({f['segundosHastaDetectar']} s)")
     print()
     print(puntaje.replace("**", ""))
 
