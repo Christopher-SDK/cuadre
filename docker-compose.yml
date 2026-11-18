@@ -1,0 +1,27 @@
+# docker compose up --build   → API en http://localhost:8080 (otro puerto: CUADRE_PUERTO=8088 docker compose up --build)
+# CUADRE_BUG=REDONDEO docker compose up --build   → la misma API con un defecto sembrado
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: cuadre
+      POSTGRES_USER: cuadre
+      POSTGRES_PASSWORD: cuadre
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cuadre -d cuadre"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build: .
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/cuadre
+      DB_USER: cuadre
+      DB_PASSWORD: cuadre
+      CUADRE_BUG: ${CUADRE_BUG:-}
+    ports:
+      - "${CUADRE_PUERTO:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
