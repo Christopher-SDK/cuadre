@@ -5,3 +5,20 @@ target/
 .vscode/
 .DS_Store
 /site/
+web/node_modules/
+web/dist/
+web/bug/
+# web: generated pages and data (scripts/generar.mjs writes them from datos/matriz.json)
+web/index.html
+web/404.html
+web/publico/escenarios.json
+web/publico/matriz.json
+web/publico/sitemap.xml
+web/publico/robots.txt
+# web: local working files
+web/activos/
+web/docs/
+web/progreso/
+web/qa/*
+!web/qa/spec.py
+!web/qa/pages.py

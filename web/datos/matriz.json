@@ -1,0 +1,642 @@
+{
+  "generado": "2026-11-18T20:54:46Z",
+  "limpio": {
+    "pruebas": 86,
+    "fallas": 0,
+    "segundosSuite": 41,
+    "detalle": []
+  },
+  "puntaje": {
+    "detectados": 7,
+    "total": 7
+  },
+  "allure": false,
+  "bugs": [
+    {
+      "bug": "DOBLE_CARGO",
+      "titulo": "Doble cargo en un reintento",
+      "cliente": "Su app no recibió respuesta, reintentó la transferencia a los dos minutos y el banco le cobró dos veces.",
+      "causa": "La ventana de idempotencia de 24 horas se convierte a milisegundos sin el factor 1000: dura 86,4 segundos.",
+      "clase": "src/main/java/cuadre/mutantes/VentanaDeReintentos.java",
+      "regla": "Idempotencia",
+      "caso": [
+        "Ana tiene S/ 5 000,00 y transfiere S/ 2 000,00 a Beto con la clave «pago-alquiler».",
+        "Su app no recibe la respuesta a tiempo.",
+        "La app reintenta a los 87 segundos con la misma clave.",
+        "La ventana de idempotencia, mal convertida, duró 86,4 segundos: el sistema no reconoce la clave y vuelve a transferir."
+      ],
+      "esperado": "Ana: S/ 2 999,90",
+      "obtenido": "Ana: S/ 999,80",
+      "detectado": true,
+      "pruebas": 86,
+      "detectadoPor": [
+        {
+          "prueba": "Idempotencia: reenviar N veces la misma transferencia con la misma clave equivale a enviarla una vez",
+          "grupo": "CuentasPropiedades",
+          "capa": "Invariantes",
+          "segundos": 0.014,
+          "semilla": "230565849441056438"
+        },
+        {
+          "prueba": "En PostgreSQL: las mismas secuencias contra la base de datos real",
+          "grupo": "ModeloPropiedades",
+          "capa": "Modelo de referencia",
+          "segundos": 0.333,
+          "semilla": "-2748580243290292642"
+        },
+        {
+          "prueba": "En memoria: cualquier secuencia de depósitos, retiros, transferencias, caídas, reintentos, reversos y pagos de crédito",
+          "grupo": "ModeloPropiedades",
+          "capa": "Modelo de referencia",
+          "segundos": 45.1,
+          "semilla": "-458267331440023064"
+        }
+      ],
+      "capas": [
+        "Invariantes",
+        "Modelo de referencia"
+      ],
+      "segundosHastaDetectar": 0.014,
+      "segundosSuite": 82,
+      "casoMinimo": "tasa: 0.00005\nmonto: 1\nesperasEnSegundos: [87]",
+      "casoMinimoDe": "Idempotencia: reenviar N veces la misma transferencia con la misma clave equivale a enviarla una vez",
+      "primeraEnFallar": "Idempotencia: reenviar N veces la misma transferencia con la misma clave equivale a enviarla una vez",
+      "reglaQueLoAtrapo": "Idempotencia: reenviar N veces la misma transferencia con la misma clave equivale a enviarla una vez",
+      "capaDeLaRegla": "Invariantes",
+      "segundosDeLaRegla": 0.014,
+      "semilla": "230565849441056438"
+    },
+    {
+      "bug": "CARRERA",
+      "titulo": "Carrera entre transferencias simultáneas",
+      "cliente": "Dos pagos llegan al mismo tiempo y uno «pisa» al otro: el saldo que ve el cliente no coincide con sus movimientos.",
+      "causa": "Se lee el saldo sin bloqueo y se escribe el valor calculado en Java (leer → modificar → escribir).",
+      "clase": "src/main/java/cuadre/mutantes/LecturaSinBloqueo.java",
+      "regla": "16 clientes transfiriéndose",
+      "caso": [
+        "Tres cuentas empiezan con S/ 1 500,00 cada una.",
+        "16 clientes lanzan a la vez 640 transferencias cruzadas entre ellas (semilla fija por repetición).",
+        "Dos transacciones leen el mismo saldo sin bloqueo y cada una escribe el suyo: la segunda pisa a la primera.",
+        "Al terminar, el auditor compara cada saldo con la suma de sus movimientos."
+      ],
+      "esperado": "Saldo = suma de sus movimientos",
+      "obtenido": "4 cuentas descuadradas",
+      "detectado": true,
+      "pruebas": 86,
+      "detectadoPor": [
+        {
+          "prueba": "16 reintentos simultáneos de la misma transferencia con la misma clave debitan una sola vez · repetición 2 de 3",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 0.086,
+          "semilla": null
+        },
+        {
+          "prueba": "16 reintentos simultáneos de la misma transferencia con la misma clave debitan una sola vez · repetición 1 de 3",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 0.112,
+          "semilla": null
+        },
+        {
+          "prueba": "16 reintentos simultáneos de la misma transferencia con la misma clave debitan una sola vez · repetición 3 de 3",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 0.117,
+          "semilla": null
+        },
+        {
+          "prueba": "16 clientes transfiriéndose dinero entre 3 cuentas al mismo tiempo: nada se pierde, nada se duplica · repetición 4 de 5",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 26.792,
+          "semilla": null
+        },
+        {
+          "prueba": "16 clientes transfiriéndose dinero entre 3 cuentas al mismo tiempo: nada se pierde, nada se duplica · repetición 3 de 5",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 27.049,
+          "semilla": null
+        },
+        {
+          "prueba": "16 clientes transfiriéndose dinero entre 3 cuentas al mismo tiempo: nada se pierde, nada se duplica · repetición 1 de 5",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 27.941,
+          "semilla": null
+        },
+        {
+          "prueba": "16 clientes transfiriéndose dinero entre 3 cuentas al mismo tiempo: nada se pierde, nada se duplica · repetición 2 de 5",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 28.121,
+          "semilla": null
+        },
+        {
+          "prueba": "16 clientes transfiriéndose dinero entre 3 cuentas al mismo tiempo: nada se pierde, nada se duplica · repetición 5 de 5",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 28.639,
+          "semilla": null
+        }
+      ],
+      "capas": [
+        "Concurrencia"
+      ],
+      "segundosHastaDetectar": 0.086,
+      "segundosSuite": 172,
+      "casoMinimo": "[hallazgos del auditor (semilla 20261119)] \nExpecting empty but was: [\"La cuenta C-123990EC muestra PEN 4692.43 pero sus movimientos suman 215972 céntimos\",\n    \"La cuenta C-8B93EC86 muestra PEN 2693.79 pero sus movimientos suman -23480 céntimos\",\n    \"La cuenta C-9C4F61A9 muestra PEN 4244.45 pero sus movimientos suman 248463 céntimos\",\n    \"La cuenta ITF-PEN muestra PEN 62.45 pero sus movimientos suman 9045 céntimos\"]",
+      "casoMinimoDe": "16 clientes transfiriéndose dinero entre 3 cuentas al mismo tiempo: nada se pierde, nada se duplica · repetición 1 de 5",
+      "primeraEnFallar": "16 reintentos simultáneos de la misma transferencia con la misma clave debitan una sola vez · repetición 2 de 3",
+      "reglaQueLoAtrapo": "16 clientes transfiriéndose dinero entre 3 cuentas al mismo tiempo: nada se pierde, nada se duplica · repetición 4 de 5",
+      "capaDeLaRegla": "Concurrencia",
+      "segundosDeLaRegla": 26.792,
+      "semilla": null
+    },
+    {
+      "bug": "REDONDEO",
+      "titulo": "Interés truncado en vez de redondeado",
+      "cliente": "El cronograma parece correcto y termina en cero, pero el interés de algunos meses queda un céntimo por debajo de lo pactado.",
+      "causa": "Una «mejora» para no cobrar fracciones al cliente usa RoundingMode.DOWN en el interés mensual.",
+      "clase": "src/main/java/cuadre/mutantes/InteresSinCobroDeFracciones.java",
+      "regla": "Caso 2:",
+      "caso": [
+        "Crédito de S/ 1 000,00 a 3 meses con TEM de 1 % exacto (caso dorado 2).",
+        "Cuota 1: interés sobre S/ 1 000,00 = 10,00.",
+        "Cuota 2: interés sobre S/ 669,98 = 6,6998, que se redondea al céntimo.",
+        "El sistema trunca en lugar de redondear."
+      ],
+      "esperado": "Interés cuota 2: S/ 6,70",
+      "obtenido": "Interés cuota 2: S/ 6,69",
+      "detectado": true,
+      "pruebas": 86,
+      "detectadoPor": [
+        {
+          "prueba": "Caso 2: S/ 1 000 a 3 meses con TEM de 1 % exacto. Redondeo del interés mitad hacia arriba",
+          "grupo": "CasosDoradosTest",
+          "capa": "Oráculo financiero",
+          "segundos": 0.001,
+          "semilla": null
+        },
+        {
+          "prueba": "Caso 3: S/ 5 000 a 6 meses, TEA 25 %, desgravamen 0,05 % mensual, comisión S/ 5 al mes y S/ 50 al desembolsar",
+          "grupo": "CasosDoradosTest",
+          "capa": "Oráculo financiero",
+          "segundos": 0.006,
+          "semilla": null
+        },
+        {
+          "prueba": "En memoria: cualquier secuencia de depósitos, retiros, transferencias, caídas, reintentos, reversos y pagos de crédito",
+          "grupo": "ModeloPropiedades",
+          "capa": "Modelo de referencia",
+          "segundos": 0.062,
+          "semilla": "3611405269826600836"
+        },
+        {
+          "prueba": "Cada cuota del cronograma coincide al céntimo con la del oráculo",
+          "grupo": "OraculoPropiedades",
+          "capa": "Oráculo financiero",
+          "segundos": 0.107,
+          "semilla": "-4494716614393334517"
+        },
+        {
+          "prueba": "Desembolsar, pagar una cuota y prepagar el resto deja el crédito cancelado",
+          "grupo": "ApiPruebas",
+          "capa": "API",
+          "segundos": 0.114,
+          "semilla": null
+        },
+        {
+          "prueba": "En PostgreSQL: las mismas secuencias contra la base de datos real",
+          "grupo": "ModeloPropiedades",
+          "capa": "Modelo de referencia",
+          "segundos": 0.172,
+          "semilla": "-3515861010286760306"
+        },
+        {
+          "prueba": "Al pagar la última cuota el saldo queda en 0,00 exactos, ni un céntimo más ni menos",
+          "grupo": "CreditoPropiedades",
+          "capa": "Propiedades de crédito",
+          "segundos": 0.238,
+          "semilla": "675501975957038733"
+        },
+        {
+          "prueba": "La suma de las amortizaciones es exactamente el monto prestado",
+          "grupo": "CreditoPropiedades",
+          "capa": "Propiedades de crédito",
+          "segundos": 0.297,
+          "semilla": "3874504810965954403"
+        },
+        {
+          "prueba": "Ninguna cuota ni componente es negativo y el saldo baja cada mes",
+          "grupo": "CreditoPropiedades",
+          "capa": "Propiedades de crédito",
+          "segundos": 0.806,
+          "semilla": "7383984058519937671"
+        },
+        {
+          "prueba": "La simulación devuelve el cronograma del caso dorado 3 y su TCEA de 32,80 %",
+          "grupo": "ApiPruebas",
+          "capa": "API",
+          "segundos": 0.873,
+          "semilla": null
+        },
+        {
+          "prueba": "Sin seguro ni comisiones, la TCEA solo se aparta de la TEA por el redondeo a céntimos (< 0,05 puntos)",
+          "grupo": "CreditoPropiedades",
+          "capa": "Propiedades de crédito",
+          "segundos": 1.5,
+          "semilla": "-4725987430545745510"
+        },
+        {
+          "prueba": "Cobrar seguro o comisiones siempre encarece el crédito: la TCEA con costos supera a la del mismo crédito sin costos",
+          "grupo": "CreditoPropiedades",
+          "capa": "Propiedades de crédito",
+          "segundos": 45.107,
+          "semilla": "-3617307724826475721"
+        }
+      ],
+      "capas": [
+        "API",
+        "Modelo de referencia",
+        "Oráculo financiero",
+        "Propiedades de crédito"
+      ],
+      "segundosHastaDetectar": 0.001,
+      "segundosSuite": 83,
+      "casoMinimo": "1. desembolsar a A un crédito de 1000.00 a 1 meses, TEA 0.0001, desgravamen 0.00000, comisión 0.00/mes y 0.00 al desembolso\n\n→ paso 1: cuotas pendientes del crédito 0",
+      "casoMinimoDe": "En memoria: cualquier secuencia de depósitos, retiros, transferencias, caídas, reintentos, reversos y pagos de crédito",
+      "primeraEnFallar": "Caso 2: S/ 1 000 a 3 meses con TEM de 1 % exacto. Redondeo del interés mitad hacia arriba",
+      "reglaQueLoAtrapo": "Caso 2: S/ 1 000 a 3 meses con TEM de 1 % exacto. Redondeo del interés mitad hacia arriba",
+      "capaDeLaRegla": "Oráculo financiero",
+      "segundosDeLaRegla": 0.001,
+      "semilla": "3611405269826600836"
+    },
+    {
+      "bug": "REVERSO_PARCIAL",
+      "titulo": "Reverso que no devuelve el impuesto",
+      "cliente": "Le anulan una transferencia hecha por error y le devuelven el monto, pero el ITF cobrado se queda en el banco.",
+      "causa": "Alguien interpretó que «el ITF no es reembolsable» y excluyó del reverso las líneas del impuesto.",
+      "clase": "src/main/java/cuadre/mutantes/ReversoSinItf.java",
+      "regla": "Reverso:",
+      "caso": [
+        "Ana tiene S/ 5 000,00 y transfiere S/ 2 000,00 a Beto; paga S/ 0,10 de ITF.",
+        "Ana pide anular la transferencia hecha por error.",
+        "El reverso devuelve los S/ 2 000,00 pero omite las líneas del impuesto."
+      ],
+      "esperado": "Ana: S/ 5 000,00",
+      "obtenido": "Ana: S/ 4 999,90",
+      "detectado": true,
+      "pruebas": 86,
+      "detectadoPor": [
+        {
+          "prueba": "Reverso: una operación seguida de su reverso deja todo exactamente como estaba, impuesto incluido",
+          "grupo": "CuentasPropiedades",
+          "capa": "Invariantes",
+          "segundos": 0.043,
+          "semilla": "-5916465975553238995"
+        },
+        {
+          "prueba": "Un reverso deja ambos saldos como antes; un segundo reverso responde 409",
+          "grupo": "ApiPruebas",
+          "capa": "API",
+          "segundos": 0.077,
+          "semilla": null
+        },
+        {
+          "prueba": "En PostgreSQL: las mismas secuencias contra la base de datos real",
+          "grupo": "ModeloPropiedades",
+          "capa": "Modelo de referencia",
+          "segundos": 0.631,
+          "semilla": "38441065562183094"
+        },
+        {
+          "prueba": "En memoria: cualquier secuencia de depósitos, retiros, transferencias, caídas, reintentos, reversos y pagos de crédito",
+          "grupo": "ModeloPropiedades",
+          "capa": "Modelo de referencia",
+          "segundos": 15.417,
+          "semilla": "4294886890441829157"
+        }
+      ],
+      "capas": [
+        "API",
+        "Invariantes",
+        "Modelo de referencia"
+      ],
+      "segundosHastaDetectar": 0.043,
+      "segundosSuite": 52,
+      "casoMinimo": "1. transferir 0.01 de B a A con clave k1\n2. transferir 0.01 de A a B con clave k1\n3. transferir 0.01 de A a B con clave k1\n4. transferir 0.01 de B a A con clave k1\n5. retirar 0.01 de A\n6. desembolsar a A un crédito de 1000.00 a 1 meses, TEA 0.0000, desgravamen 0.00000, comisión 0.00/mes y 0.00 al desembolso\n7. transferir 10.00 de A a B con clave k2\n8. revertir la operación #4\n\n→ paso 8: saldo de A (céntimos)",
+      "casoMinimoDe": "En memoria: cualquier secuencia de depósitos, retiros, transferencias, caídas, reintentos, reversos y pagos de crédito",
+      "primeraEnFallar": "Reverso: una operación seguida de su reverso deja todo exactamente como estaba, impuesto incluido",
+      "reglaQueLoAtrapo": "Reverso: una operación seguida de su reverso deja todo exactamente como estaba, impuesto incluido",
+      "capaDeLaRegla": "Invariantes",
+      "segundosDeLaRegla": 0.043,
+      "semilla": "4294886890441829157"
+    },
+    {
+      "bug": "IMPUESTO_DOBLE",
+      "titulo": "ITF cobrado a ambos lados",
+      "cliente": "Le envían S/ 2 000 y recibe S/ 1 999,90: al que recibe también le descontaron el impuesto.",
+      "causa": "La regla «el ITF grava débitos y créditos» se aplicó al pie de la letra en una transferencia interna.",
+      "clase": "src/main/java/cuadre/mutantes/ItfSobreDebitosYCreditos.java",
+      "regla": "cobra el ITF una sola vez",
+      "caso": [
+        "Ana transfiere S/ 2 000,00 a Beto.",
+        "El sistema cobra el ITF a Ana: S/ 0,10.",
+        "Y también se lo cobra a Beto al acreditarle."
+      ],
+      "esperado": "Beto: S/ 2 000,00",
+      "obtenido": "Beto: S/ 1 999,90",
+      "detectado": true,
+      "pruebas": 86,
+      "detectadoPor": [
+        {
+          "prueba": "Una transferencia mueve exactamente el monto y cobra el ITF una sola vez, al que envía",
+          "grupo": "CuentasPropiedades",
+          "capa": "Invariantes",
+          "segundos": 0.022,
+          "semilla": "2739606830857968939"
+        },
+        {
+          "prueba": "16 reintentos simultáneos de la misma transferencia con la misma clave debitan una sola vez · repetición 3 de 3",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 0.033,
+          "semilla": null
+        },
+        {
+          "prueba": "16 reintentos simultáneos de la misma transferencia con la misma clave debitan una sola vez · repetición 2 de 3",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 0.037,
+          "semilla": null
+        },
+        {
+          "prueba": "16 reintentos simultáneos de la misma transferencia con la misma clave debitan una sola vez · repetición 1 de 3",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 0.053,
+          "semilla": null
+        },
+        {
+          "prueba": "Reenviar la misma transferencia con la misma clave devuelve la misma operación y cobra una sola vez",
+          "grupo": "ApiPruebas",
+          "capa": "API",
+          "segundos": 0.084,
+          "semilla": null
+        },
+        {
+          "prueba": "En memoria: cualquier secuencia de depósitos, retiros, transferencias, caídas, reintentos, reversos y pagos de crédito",
+          "grupo": "ModeloPropiedades",
+          "capa": "Modelo de referencia",
+          "segundos": 0.135,
+          "semilla": "-4937597667590125210"
+        },
+        {
+          "prueba": "En PostgreSQL: las mismas secuencias contra la base de datos real",
+          "grupo": "ModeloPropiedades",
+          "capa": "Modelo de referencia",
+          "segundos": 0.432,
+          "semilla": "-8139449650606002688"
+        }
+      ],
+      "capas": [
+        "API",
+        "Concurrencia",
+        "Invariantes",
+        "Modelo de referencia"
+      ],
+      "segundosHastaDetectar": 0.022,
+      "segundosSuite": 41,
+      "casoMinimo": "1. transferir 10.00 de B a A con clave k1\n\n→ paso 1: saldo de A (céntimos)",
+      "casoMinimoDe": "En memoria: cualquier secuencia de depósitos, retiros, transferencias, caídas, reintentos, reversos y pagos de crédito",
+      "primeraEnFallar": "Una transferencia mueve exactamente el monto y cobra el ITF una sola vez, al que envía",
+      "reglaQueLoAtrapo": "Una transferencia mueve exactamente el monto y cobra el ITF una sola vez, al que envía",
+      "capaDeLaRegla": "Invariantes",
+      "segundosDeLaRegla": 0.022,
+      "semilla": "-4937597667590125210"
+    },
+    {
+      "bug": "CRONOGRAMA",
+      "titulo": "Última cuota sin ajustar",
+      "cliente": "Paga todas sus cuotas y el sistema sigue mostrándole una deuda (o un saldo a favor) de unos céntimos.",
+      "causa": "La última cuota se calcula igual que las demás y no absorbe los céntimos que dejó el redondeo.",
+      "clase": "src/main/java/cuadre/mutantes/CuotaFijaHastaElFinal.java",
+      "regla": "Caso 1:",
+      "caso": [
+        "Crédito de S/ 10 000,00 a 12 meses sin interés (caso dorado 1).",
+        "Cuota base: 10 000 / 12 = 833,33. Las 11 primeras amortizan S/ 9 166,63.",
+        "Quedan S/ 833,37, pero la cuota 12 vuelve a ser de 833,33."
+      ],
+      "esperado": "Saldo final: S/ 0,00",
+      "obtenido": "Saldo final: S/ 0,04",
+      "detectado": true,
+      "pruebas": 86,
+      "detectadoPor": [
+        {
+          "prueba": "Caso 3: S/ 5 000 a 6 meses, TEA 25 %, desgravamen 0,05 % mensual, comisión S/ 5 al mes y S/ 50 al desembolsar",
+          "grupo": "CasosDoradosTest",
+          "capa": "Oráculo financiero",
+          "segundos": 0.001,
+          "semilla": null
+        },
+        {
+          "prueba": "Caso 2: S/ 1 000 a 3 meses con TEM de 1 % exacto. Redondeo del interés mitad hacia arriba",
+          "grupo": "CasosDoradosTest",
+          "capa": "Oráculo financiero",
+          "segundos": 0.002,
+          "semilla": null
+        },
+        {
+          "prueba": "Caso 1: S/ 10 000 a 12 meses sin interés. La última cuota recoge los 4 céntimos del redondeo",
+          "grupo": "CasosDoradosTest",
+          "capa": "Oráculo financiero",
+          "segundos": 0.005,
+          "semilla": null
+        },
+        {
+          "prueba": "Sin seguro ni comisiones, la TCEA solo se aparta de la TEA por el redondeo a céntimos (< 0,05 puntos)",
+          "grupo": "CreditoPropiedades",
+          "capa": "Propiedades de crédito",
+          "segundos": 0.023,
+          "semilla": "-8543899745046141200"
+        },
+        {
+          "prueba": "Desembolsar, pagar una cuota y prepagar el resto deja el crédito cancelado",
+          "grupo": "ApiPruebas",
+          "capa": "API",
+          "segundos": 0.034,
+          "semilla": null
+        },
+        {
+          "prueba": "Ninguna cuota ni componente es negativo y el saldo baja cada mes",
+          "grupo": "CreditoPropiedades",
+          "capa": "Propiedades de crédito",
+          "segundos": 0.04,
+          "semilla": "3044299357716861901"
+        },
+        {
+          "prueba": "Al pagar la última cuota el saldo queda en 0,00 exactos, ni un céntimo más ni menos",
+          "grupo": "CreditoPropiedades",
+          "capa": "Propiedades de crédito",
+          "segundos": 0.043,
+          "semilla": "-6645611985311783885"
+        },
+        {
+          "prueba": "Cobrar seguro o comisiones siempre encarece el crédito: la TCEA con costos supera a la del mismo crédito sin costos",
+          "grupo": "CreditoPropiedades",
+          "capa": "Propiedades de crédito",
+          "segundos": 0.045,
+          "semilla": "-1796941436957683690"
+        },
+        {
+          "prueba": "La suma de las amortizaciones es exactamente el monto prestado",
+          "grupo": "CreditoPropiedades",
+          "capa": "Propiedades de crédito",
+          "segundos": 0.049,
+          "semilla": "-5632372775992977315"
+        },
+        {
+          "prueba": "En memoria: cualquier secuencia de depósitos, retiros, transferencias, caídas, reintentos, reversos y pagos de crédito",
+          "grupo": "ModeloPropiedades",
+          "capa": "Modelo de referencia",
+          "segundos": 0.066,
+          "semilla": "-4927743108723548033"
+        },
+        {
+          "prueba": "Cada cuota del cronograma coincide al céntimo con la del oráculo",
+          "grupo": "OraculoPropiedades",
+          "capa": "Oráculo financiero",
+          "segundos": 0.136,
+          "semilla": "2686363270281500548"
+        },
+        {
+          "prueba": "En PostgreSQL: las mismas secuencias contra la base de datos real",
+          "grupo": "ModeloPropiedades",
+          "capa": "Modelo de referencia",
+          "segundos": 0.19,
+          "semilla": "7579525189598539867"
+        },
+        {
+          "prueba": "La simulación devuelve el cronograma del caso dorado 3 y su TCEA de 32,80 %",
+          "grupo": "ApiPruebas",
+          "capa": "API",
+          "segundos": 0.743,
+          "semilla": null
+        }
+      ],
+      "capas": [
+        "API",
+        "Modelo de referencia",
+        "Oráculo financiero",
+        "Propiedades de crédito"
+      ],
+      "segundosHastaDetectar": 0.001,
+      "segundosSuite": 38,
+      "casoMinimo": "1. desembolsar a A un crédito de 1000.00 a 2 meses, TEA 0.0001, desgravamen 0.00000, comisión 0.00/mes y 0.00 al desembolso\n\n→ paso 1: el modelo acepta la operación y el sistema la rechazó (CONDICIONES_INVALIDAS: Condiciones no viables: el monto es muy pequeño para ese plazo y tasa (cuota 2))",
+      "casoMinimoDe": "En memoria: cualquier secuencia de depósitos, retiros, transferencias, caídas, reintentos, reversos y pagos de crédito",
+      "primeraEnFallar": "Caso 3: S/ 5 000 a 6 meses, TEA 25 %, desgravamen 0,05 % mensual, comisión S/ 5 al mes y S/ 50 al desembolsar",
+      "reglaQueLoAtrapo": "Caso 1: S/ 10 000 a 12 meses sin interés. La última cuota recoge los 4 céntimos del redondeo",
+      "capaDeLaRegla": "Oráculo financiero",
+      "segundosDeLaRegla": 0.005,
+      "semilla": "-4927743108723548033"
+    },
+    {
+      "bug": "TIMEOUT_A_MEDIAS",
+      "titulo": "Timeout entre débito y crédito",
+      "cliente": "El servidor cae a mitad de la transferencia: el dinero sale de su cuenta y no llega a ninguna; al reintentar, se lo cobran otra vez.",
+      "causa": "La transferencia se partió en dos transacciones para liberar antes el bloqueo de la cuenta origen.",
+      "clase": "src/main/java/cuadre/mutantes/TransferenciaEnDosTramos.java",
+      "regla": "El libro mayor siempre cuadra",
+      "caso": [
+        "Ana tiene S/ 5 000,00 y transfiere S/ 2 000,00 a Beto.",
+        "Se confirma el débito: el dinero pasa de Ana a la cuenta puente.",
+        "El servidor cae antes del crédito."
+      ],
+      "esperado": "Cuenta puente: S/ 0,00",
+      "obtenido": "Cuenta puente: S/ 2 000,00",
+      "detectado": true,
+      "pruebas": 86,
+      "detectadoPor": [
+        {
+          "prueba": "16 reintentos simultáneos de la misma transferencia con la misma clave debitan una sola vez · repetición 2 de 3",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 0.037,
+          "semilla": null
+        },
+        {
+          "prueba": "16 reintentos simultáneos de la misma transferencia con la misma clave debitan una sola vez · repetición 1 de 3",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 0.046,
+          "semilla": null
+        },
+        {
+          "prueba": "16 reintentos simultáneos de la misma transferencia con la misma clave debitan una sola vez · repetición 3 de 3",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 0.047,
+          "semilla": null
+        },
+        {
+          "prueba": "Conservación: entre clientes el dinero no se crea ni se destruye (lo que falta está en el ITF recaudado)",
+          "grupo": "CuentasPropiedades",
+          "capa": "Invariantes",
+          "segundos": 0.071,
+          "semilla": "3981264419540803505"
+        },
+        {
+          "prueba": "El libro mayor siempre cuadra: debe = haber, cada saldo = sus movimientos y la cuenta puente queda en cero",
+          "grupo": "CuentasPropiedades",
+          "capa": "Invariantes",
+          "segundos": 0.222,
+          "semilla": "8125952722677798205"
+        },
+        {
+          "prueba": "En PostgreSQL: las mismas secuencias contra la base de datos real",
+          "grupo": "ModeloPropiedades",
+          "capa": "Modelo de referencia",
+          "segundos": 0.253,
+          "semilla": "1475017606129813053"
+        },
+        {
+          "prueba": "En memoria: cualquier secuencia de depósitos, retiros, transferencias, caídas, reintentos, reversos y pagos de crédito",
+          "grupo": "ModeloPropiedades",
+          "capa": "Modelo de referencia",
+          "segundos": 0.572,
+          "semilla": "5736811692588219776"
+        },
+        {
+          "prueba": "16 clientes transfiriéndose dinero entre 3 cuentas al mismo tiempo: nada se pierde, nada se duplica · repetición 5 de 5",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 1.524,
+          "semilla": null
+        },
+        {
+          "prueba": "16 clientes transfiriéndose dinero entre 3 cuentas al mismo tiempo: nada se pierde, nada se duplica · repetición 1 de 5",
+          "grupo": "ConcurrenciaPruebas",
+          "capa": "Concurrencia",
+          "segundos": 1.922,
+          "semilla": null
+        }
+      ],
+      "capas": [
+        "Concurrencia",
+        "Invariantes",
+        "Modelo de referencia"
+      ],
+      "segundosHastaDetectar": 0.037,
+      "segundosSuite": 66,
+      "casoMinimo": "1. transferir 0.01 de B a A con clave k100, pero el servidor cae (transferencia: entre débito y crédito)\n\n→ paso 1: saldo de B (céntimos)",
+      "casoMinimoDe": "En memoria: cualquier secuencia de depósitos, retiros, transferencias, caídas, reintentos, reversos y pagos de crédito",
+      "primeraEnFallar": "16 reintentos simultáneos de la misma transferencia con la misma clave debitan una sola vez · repetición 2 de 3",
+      "reglaQueLoAtrapo": "El libro mayor siempre cuadra: debe = haber, cada saldo = sus movimientos y la cuenta puente queda en cero",
+      "capaDeLaRegla": "Invariantes",
+      "segundosDeLaRegla": 0.222,
+      "semilla": "5736811692588219776"
+    }
+  ]
+}
