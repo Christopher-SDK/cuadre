@@ -133,7 +133,7 @@ const NOTAS_HTML = `
     <ol class="notas" id="notas">
       <li id="nota-1">Resultado de <code>scripts/matriz.sh</code>: la suite completa se corre una vez sin defectos y una vez por cada <code>CUADRE_BUG</code>. Corrida del ${fecha}.</li>
       <li id="nota-2">Pruebas reportadas por Surefire en la corrida sin defectos: unitarias, propiedades (jqwik), modelo de referencia, concurrencia sobre PostgreSQL (Testcontainers), oráculo y API.</li>
-      <li id="nota-3">Tiempo de la suite completa en la máquina de desarrollo, con PostgreSQL ya descargado. En la CI de GitHub tarda más.</li>
+      <li id="nota-3">Tiempo de la suite completa en la corrida que generó esta página: GitHub Actions, con PostgreSQL real en Testcontainers. En una máquina local con la imagen ya descargada tarda menos.</li>
     </ol>
 `;
 const pie = (conNotas) => `
