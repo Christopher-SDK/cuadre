@@ -1,5 +1,6 @@
 package cuadre.unitario;
 
+import io.qameta.allure.Epic;
 import cuadre.dominio.dinero.Dinero;
 import cuadre.dominio.impuesto.ReglaItf;
 import net.jqwik.api.ForAll;
@@ -16,6 +17,7 @@ import static cuadre.dominio.dinero.Moneda.PEN;
 import static cuadre.dominio.impuesto.ReglaItf.Redondeo.LEY_PERUANA;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Epic("1 · Unitarias")
 @DisplayName("ITF: regla de redondeo")
 class ReglaItfTest {
 

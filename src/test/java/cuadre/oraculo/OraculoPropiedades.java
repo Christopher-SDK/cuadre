@@ -1,5 +1,6 @@
 package cuadre.oraculo;
 
+import io.qameta.allure.Epic;
 import cuadre.dominio.credito.CalculadoraFrancesa;
 import cuadre.dominio.credito.CalculadoraTcea;
 import cuadre.dominio.credito.CondicionesCredito;
@@ -25,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Pruebas diferenciales: el sistema y el oráculo calculan lo mismo por caminos distintos.
  * Si alguna vez discrepan en un céntimo, uno de los dos está mal, y la prueba muestra el caso exacto.
  */
+@Epic("5 · Oráculo financiero")
 @Label("Oráculo financiero: sistema contra implementación independiente")
 class OraculoPropiedades {
 

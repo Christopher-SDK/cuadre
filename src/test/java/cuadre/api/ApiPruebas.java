@@ -1,5 +1,6 @@
 package cuadre.api;
 
+import io.qameta.allure.Epic;
 import cuadre.soporte.Postgres;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -24,6 +25,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.startsWith;
 
 /** La API vista desde afuera: códigos HTTP, validaciones y errores en formato problem+json. */
+@Epic("6 · API")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(ApiPruebas.BaseDeDatos.class)
 @DisplayName("API REST")

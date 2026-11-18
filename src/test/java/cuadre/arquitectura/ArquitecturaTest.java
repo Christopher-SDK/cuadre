@@ -1,5 +1,6 @@
 package cuadre.arquitectura;
 
+import io.qameta.allure.Epic;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -7,6 +8,7 @@ import com.tngtech.archunit.lang.ArchRule;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
+@Epic("0 · Arquitectura")
 @AnalyzeClasses(packages = "cuadre", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArquitecturaTest {
 

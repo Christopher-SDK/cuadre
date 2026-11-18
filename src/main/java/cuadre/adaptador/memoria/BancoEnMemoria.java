@@ -48,6 +48,12 @@ public class BancoEnMemoria implements Banco {
         return resultado;
     }
 
+    /** Una lectura no modifica nada: trabaja sobre el estado confirmado, sin copiarlo. */
+    @Override
+    public synchronized <T> T leer(Function<Libro, T> lectura) {
+        return lectura.apply(new LibroEnMemoria(estado));
+    }
+
     private record Clave(UUID operacion, Instant fecha) {
     }
 

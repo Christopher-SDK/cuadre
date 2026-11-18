@@ -1,5 +1,6 @@
 package cuadre.oraculo;
 
+import io.qameta.allure.Epic;
 import cuadre.dominio.credito.CalculadoraFrancesa;
 import cuadre.dominio.credito.CalculadoraTcea;
 import cuadre.dominio.credito.CondicionesCredito;
@@ -24,6 +25,7 @@ import static org.assertj.core.api.Assertions.within;
  * Son la referencia que no depende de ningún código: si el sistema y el oráculo coincidieran en un error,
  * estos casos lo delatarían.
  */
+@Epic("5 · Oráculo financiero")
 @DisplayName("Casos dorados de crédito (calculados a mano)")
 class CasosDoradosTest {
 

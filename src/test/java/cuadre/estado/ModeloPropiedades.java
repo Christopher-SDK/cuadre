@@ -1,5 +1,6 @@
 package cuadre.estado;
 
+import io.qameta.allure.Epic;
 import cuadre.dominio.credito.CondicionesCredito;
 import cuadre.dominio.dinero.Dinero;
 import cuadre.dominio.falla.PuntoDeFalla;
@@ -12,6 +13,7 @@ import net.jqwik.api.ForAll;
 import net.jqwik.api.Label;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
+import net.jqwik.api.ShrinkingMode;
 import net.jqwik.api.state.Action;
 import net.jqwik.api.state.ActionChain;
 import net.jqwik.api.state.Transformer;
@@ -26,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * compara el sistema real contra el modelo de referencia. Si discrepan, jqwik reduce la secuencia
  * a la más corta que todavía falla y la imprime junto con la semilla.
  */
+@Epic("3 · Modelo de referencia")
 @Label("Modelo de referencia: el sistema se comporta igual que el modelo en cualquier secuencia")
 class ModeloPropiedades {
 
@@ -35,7 +38,8 @@ class ModeloPropiedades {
         cadena.withInvariant("el auditor no encuentra descuadres", m -> assertThat(m.sistema.auditar()).isEmpty()).run();
     }
 
-    @Property(tries = 40)
+    /** Sin reducción: cada ejecución contra la base cuesta; la versión en memoria ya entrega la secuencia mínima. */
+    @Property(tries = 40, shrinking = ShrinkingMode.OFF)
     @Label("En PostgreSQL: las mismas secuencias contra la base de datos real")
     void secuenciasEnPostgres(@ForAll("enPostgres") ActionChain<Mundo> cadena) {
         cadena.withInvariant("el auditor no encuentra descuadres", m -> assertThat(m.sistema.auditar()).isEmpty()).run();
@@ -62,7 +66,7 @@ class ModeloPropiedades {
                 .withAction(1, new Desembolsar())
                 .withAction(3, new PagarCuota())
                 .withAction(1, new Prepagar())
-                .withMaxTransformations(40);
+                .withMaxTransformations(30);
     }
 
     // ---------------------------------------------------------------- generadores comunes

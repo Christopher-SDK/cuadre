@@ -108,6 +108,10 @@
             <include>**/*Propiedades.java</include>
             <include>**/*Pruebas.java</include>
           </includes>
+          <!-- En los reportes XML, el nombre legible de cada prueba (@DisplayName) en vez del nombre del método -->
+          <statelessTestsetReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5Xml30StatelessReporter">
+            <usePhrasedTestCaseMethodName>true</usePhrasedTestCaseMethodName>
+          </statelessTestsetReporter>
           <systemPropertyVariables>
             <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
           </systemPropertyVariables>

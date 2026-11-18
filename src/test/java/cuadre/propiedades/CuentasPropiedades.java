@@ -1,5 +1,6 @@
 package cuadre.propiedades;
 
+import io.qameta.allure.Epic;
 import cuadre.dominio.OperacionRechazada;
 import cuadre.dominio.cuenta.Operacion;
 import cuadre.dominio.cuenta.SolicitudTransferencia;
@@ -31,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Invariantes de las cuentas. Cada propiedad se prueba con cientos de escenarios generados;
  * si una falla, jqwik imprime la semilla y la secuencia mínima que la rompe.
  */
+@Epic("2 · Invariantes")
 @Label("Cuentas: invariantes")
 class CuentasPropiedades {
 

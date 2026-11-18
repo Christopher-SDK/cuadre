@@ -1,5 +1,6 @@
 package cuadre.credito;
 
+import io.qameta.allure.Epic;
 import cuadre.dominio.OperacionRechazada;
 import cuadre.dominio.credito.CalculadoraFrancesa;
 import cuadre.dominio.credito.CalculadoraTcea;
@@ -17,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /** Dos hallazgos de las pruebas de propiedades, fijados como casos concretos. */
+@Epic("2 · Invariantes")
 @DisplayName("Crédito: casos encontrados por las propiedades")
 class TceaFrenteATeaTest {
 

@@ -1,5 +1,6 @@
 package cuadre.credito;
 
+import io.qameta.allure.Epic;
 import cuadre.dominio.credito.CalculadoraTcea;
 import cuadre.dominio.credito.CondicionesCredito;
 import cuadre.dominio.credito.Cronograma;
@@ -21,6 +22,7 @@ import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Epic("2 · Invariantes")
 @Label("Crédito: invariantes del cronograma")
 class CreditoPropiedades {
 

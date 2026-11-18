@@ -1,5 +1,6 @@
 package cuadre.unitario;
 
+import io.qameta.allure.Epic;
 import cuadre.dominio.OperacionRechazada;
 import cuadre.dominio.dinero.Dinero;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +19,7 @@ import static cuadre.dominio.dinero.Moneda.USD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+@Epic("1 · Unitarias")
 @DisplayName("Dinero")
 class DineroTest {
 

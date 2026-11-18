@@ -1,5 +1,6 @@
 package cuadre.unitario;
 
+import io.qameta.allure.Epic;
 import cuadre.dominio.dinero.Dinero;
 import cuadre.dominio.libro.Asiento;
 import cuadre.dominio.libro.Asiento.AsientoDescuadrado;
@@ -16,6 +17,7 @@ import static cuadre.dominio.libro.Movimiento.haber;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+@Epic("1 · Unitarias")
 @DisplayName("Partida doble")
 class AsientoTest {
 

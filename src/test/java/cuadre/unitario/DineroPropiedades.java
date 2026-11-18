@@ -1,5 +1,6 @@
 package cuadre.unitario;
 
+import io.qameta.allure.Epic;
 import cuadre.dominio.dinero.Dinero;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Label;
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
 import static cuadre.dominio.dinero.Moneda.PEN;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Epic("1 · Unitarias")
 @Label("Dinero: propiedades aritméticas")
 class DineroPropiedades {
 

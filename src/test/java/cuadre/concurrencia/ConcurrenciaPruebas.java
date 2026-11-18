@@ -1,5 +1,6 @@
 package cuadre.concurrencia;
 
+import io.qameta.allure.Epic;
 import cuadre.dominio.OperacionRechazada;
 import cuadre.dominio.cuenta.Operacion;
 import cuadre.dominio.cuenta.SolicitudTransferencia;
@@ -31,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Todos los hilos arrancan juntos (CountDownLatch) para maximizar el choque.
  * El resultado no depende del orden en que se intercalen: sin defectos, los invariantes se cumplen siempre.
  */
+@Epic("4 · Concurrencia")
 @DisplayName("Concurrencia sobre PostgreSQL")
 class ConcurrenciaPruebas {
 
