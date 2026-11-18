@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: cuadre
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/cuadre}
+    username: ${DB_USER:cuadre}
+    password: ${DB_PASSWORD:cuadre}
+  jackson:
+    default-property-inclusion: non_null
+
+# Parámetros inspirados en conceptos usados en Perú. Cuadre no es un sistema certificado
+# y no representa a ninguna entidad financiera real.
+cuadre:
+  # Defecto sembrado para la matriz de detección. Vacío = sistema limpio.
+  bug: ${CUADRE_BUG:}
+  itf:
+    tasa: 0.00005            # 0,005 %
+    redondeo: LEY_PERUANA    # LEY_PERUANA | TRUNCAR | MEDIO_ARRIBA
+  credito:
+    redondeo-interes: HALF_UP
+  idempotencia:
+    ventana-horas: 24
