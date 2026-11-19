@@ -30,10 +30,39 @@ export const ESCENARIOS = {
   TIMEOUT_A_MEDIAS: { op: 'El servidor <strong>cae entre el débito y el crédito</strong> de S/ 2 000,00.', filas: [['Ana', 500000, 299990], ['Beto', 0, 0], ['ITF por pagar', 0, 10], ['Cuenta puente', 0, 200000]] },
 };
 
+// Un comando con su variante de Windows (PowerShell). Sin JS se ve la de macOS / Linux.
+const SELECTOR_SO = `<div class="so" role="group" aria-label="Tu sistema operativo">
+      <button type="button" class="so__boton" data-so="unix" aria-pressed="true">macOS / Linux</button>
+      <button type="button" class="so__boton" data-so="win" aria-pressed="false">Windows</button>
+    </div>`;
+const partes = (c) => esc(c).split(' ').map((t) => `<span class="arg${t.length > 36 ? ' arg--largo' : ''}">${t}</span>`).join(' ');
+const aWin = (c) => c.replace(/\.\/mvnw\b/g, '.\\mvnw.cmd').replace(/ (-D[^ ]+)/g, ' "$1"');
+const comando = (etiqueta, unix, win, attrs = '') => {
+  const w = win ?? aWin(unix);
+  return `<div class="comando" data-unix="${esc(unix)}" data-win="${esc(w)}" ${attrs}><div class="comando__texto"><small>${etiqueta}</small><code>${partes(unix)}</code></div><button class="copiar" type="button" data-copiar="${esc(unix)}">Copiar</button></div>`;
+};
+// Pregunta al final de cada paso de la guía: «sí» marca el paso y lleva al siguiente; «no» abre la ayuda de ese paso.
+const respuesta = (paso, si, consejos) => `<div class="respuesta" data-paso="${paso}">
+          <p class="respuesta__pregunta">¿Te salió así?</p>
+          <div class="respuesta__botones"><button type="button" class="boton boton--primario respuesta__boton" data-respuesta="si">${si}</button><button type="button" class="boton boton--borde respuesta__boton" data-respuesta="no" aria-expanded="false">No, me salió otra cosa</button></div>
+          <div class="respuesta__ayuda" hidden><p class="espera__rotulo">Prueba esto</p><ul>${consejos.map((c) => `<li>${c}</li>`).join('')}</ul></div>
+        </div>`;
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const soles = (c) => (c < 0 ? '−' : '') + Math.floor(Math.abs(c) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ',' + String(Math.abs(c) % 100).padStart(2, '0');
 const seg = (s) => s == null ? '—' : s < 1 ? Math.max(1, Math.round(s * 1000)) + ' ms' : s < 90 ? s.toFixed(1).replace('.', ',') + ' s' : Math.round(s / 60) + ' min';
 const plural = (n, uno, varios) => n + ' ' + (n === 1 ? uno : (varios || uno + 's'));
+const L_PRUEBAS = D.limpio.pruebas;
+// Prueba rápida por bug, medida a mano el 2026-11-18 (con dependencias ya descargadas): tiempo y primera línea de la falla.
+const RAPIDA = {
+  DOBLE_CARGO: ['unos segundos', 'CuentasPropiedades.idempotencia'],
+  CARRERA: ['2 a 3 min: repite la carrera muchas veces', 'ConcurrenciaPruebas.reintentosSimultaneos'],
+  REDONDEO: ['unos segundos', 'CasosDoradosTest.temUnoPorCiento'],
+  REVERSO_PARCIAL: ['unos segundos', 'CuentasPropiedades.reversoDejaTodoComoEstaba'],
+  IMPUESTO_DOBLE: ['unos segundos', 'CuentasPropiedades.itfUnaSolaVez'],
+  CRONOGRAMA: ['unos segundos', 'CasosDoradosTest.sinInteres'],
+  TIMEOUT_A_MEDIAS: ['unos 15 s', 'ConcurrenciaPruebas.reintentosSimultaneos'],
+};
+const claseRapida = (bug) => RAPIDA[bug][1].split('.')[0];
 const fecha = new Date(D.generado).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' });
 
 function filasLibro(bug) {
@@ -118,9 +147,10 @@ function cabeza({ titulo, descripcion, canonica, tipo = 'website', ld }) {
     <a class="marca" href="${B}" aria-label="Cuadre, inicio">${ICONO}<span>Cuadre</span></a>
     <nav class="cab__nav" aria-label="Secciones">
       <a class="ancla" href="${B}#sembrar">Siembra un bug</a>
-      <a class="ancla" href="${B}#matriz">Matriz</a>
+      <a class="ancla ancla--media" href="${B}#matriz">Matriz</a>
       <a class="ancla" href="${B}#bugs">Los 7 bugs</a>
-      <a class="ancla" href="${B}#como">Cómo se prueba</a>
+      <a class="ancla ancla--media" href="${B}#como">Cómo se prueba</a>
+      <a class="ancla" href="${B}#correr">Pruébalo tú</a>
       <a href="${REPO}">GitHub</a>
     </nav>
     <button class="boton-tema" id="tema" type="button" aria-label="Cambiar entre modo claro y oscuro" aria-pressed="false">${SOL_LUNA}</button>
@@ -190,7 +220,7 @@ function inicio() {
           <p class="bajada">Cuadre es un core bancario de práctica con una suite que atrapa los ${D.puntaje.total} bugs que le sembramos.</p>
           <div class="acciones">
             <a class="boton boton--primario" href="${REPO}">Ver el código <span class="boton__igual" aria-hidden="true">=</span></a>
-            <a class="boton boton--borde" href="#correr">Córrelo en 1 min</a>
+            <a class="boton boton--borde" href="#correr">Pruébalo tú</a>
           </div>
           <p class="aviso">Proyecto de portafolio&nbsp;· no es un banco&nbsp;· datos ficticios</p>
         </div>
@@ -214,7 +244,7 @@ function inicio() {
       <div class="sembrar__texto">
         <p class="antetitulo">Siembra un bug</p>
         <h2 class="h2 revela" id="sembrar-titulo">Rómpelo a propósito y mira quién lo atrapa</h2>
-        <p class="intro revela">Con <code>CUADRE_BUG</code> se activa un defecto realista. El modelo de referencia dice lo que debía pasar; el sistema, lo que pasó. Si no coinciden, una prueba falla.</p>
+        <p class="intro revela">Los 7 defectos ya vienen en el código, apagados; con <code>CUADRE_BUG</code> (o <code>-Dcuadre.bug</code>) se enciende uno. El modelo de referencia dice lo que debía pasar; el sistema, lo que pasó. Si no coinciden, una prueba falla.</p>
         <ol class="tres revela">
           <li><span><strong>Siembra</strong> un defecto con <code>CUADRE_BUG</code>.</span></li>
           <li><span><strong>Corre</strong> la misma suite: propiedades, modelo, concurrencia, oráculo.</span></li>
@@ -269,7 +299,7 @@ ${libro('NINGUNO', 'El libro', 'libro')}
   <section class="seccion envoltura" id="bugs" aria-labelledby="bugs-titulo">
     <div class="seccion__cab"><div>
       <h2 class="h2 revela" id="bugs-titulo">Los 7 bugs, como los viviría un cliente</h2>
-      <p class="intro revela">Cada uno es un error que pasa en producción. Entra para ver el caso paso a paso y la salida real de la prueba que lo atrapó.</p>
+      <p class="intro revela">Errores que pasan en producción, sembrados a propósito para medir si la suite los atrapa. Vienen apagados en el código; tú puedes <a href="#enciende">encender cualquiera</a>. Entra a cada uno para ver el caso paso a paso.</p>
     </div></div>
     <ol class="lista-bugs">
       ${entradas}
@@ -316,16 +346,96 @@ ${libro('NINGUNO', 'El libro', 'libro')}
   </section>
 
   <section class="seccion envoltura" id="correr" aria-labelledby="correr-titulo">
-    <div class="seccion__cab"><div>
-      <h2 class="h2 revela" id="correr-titulo">Córrelo en tu máquina</h2>
-      <p class="intro revela">Java 21 y Docker. El repositorio trae el wrapper de Maven.</p>
-    </div></div>
-    <div class="comandos">
-      ${[['Suite completa contra el sistema limpio (~1 min)', './mvnw verify'], ['La misma suite con un defecto: debe fallar', 'CUADRE_BUG=REDONDEO ./mvnw test'], ['La matriz completa: limpio + 7 bugs', 'scripts/matriz.sh']].map(([t, c], i) => `<div class="comando revela" style="--i:${i}"><div class="comando__texto"><small>${t}</small><code>${c}</code></div><button class="copiar" type="button" data-copiar="${c}">Copiar</button></div>`).join('\n      ')}
+    <div class="seccion__cab guia__cab-seccion"><div>
+      <p class="antetitulo">Pruébalo tú</p>
+      <h2 class="h2 revela" id="correr-titulo">Compruébalo en tu máquina, en 4 pasos</h2>
+      <p class="intro revela">No subes ni configuras nada. <strong>Los 7 bugs ya vienen dentro del código, apagados.</strong> Enciendes uno solo para una corrida y, al terminar, el sistema vuelve a estar correcto.</p>
+    </div>
+    ${SELECTOR_SO}</div>
+    <div class="progreso revela" aria-live="polite">
+      <div class="progreso__barra" aria-hidden="true"><span></span></div>
+      <p class="progreso__texto"><strong data-progreso>0 de 4 pasos listos</strong> · <span data-atrapados>0 de 7 bugs atrapados por ti</span></p>
+      <button type="button" class="progreso__reiniciar" hidden>Empezar de nuevo</button>
+    </div>
+    <ol class="guia">
+      <li class="guia__paso revela" data-paso="1">
+        <h3 class="guia__titulo">Ten listos Java 21 y Docker</h3>
+        <p class="guia__texto">Docker Desktop tiene que estar <strong>abierto</strong>: las pruebas levantan un PostgreSQL real dentro de él. No hace falta instalar Maven ni crear una base de datos.</p>
+        <div class="comandos">
+          ${comando('Revisa Java: debe decir 21', 'java -version')}
+          ${comando('Revisa Docker: debe responder sin «Cannot connect»', 'docker info')}
+        </div>
+        <p class="guia__enlaces">¿Te falta algo? <a href="https://adoptium.net/temurin/releases/?version=21">Descargar Java 21</a> · <a href="https://www.docker.com/products/docker-desktop/">Descargar Docker Desktop</a></p>
+        ${respuesta(1, 'Sí, Java 21 y Docker responden', [
+          'Si <code>docker info</code> dice «Cannot connect to the Docker daemon», abre Docker Desktop y espera a que diga que está corriendo.',
+          'Si <code>java -version</code> muestra otro número, instala Java 21 con el enlace de arriba.<span data-solo="unix"> En macOS, si tienes varios: <code>export JAVA_HOME=$(/usr/libexec/java_home -v 21)</code>.</span><span data-solo="win"> En Windows, márcale «Set JAVA_HOME» al instalar.</span>',
+          'Si dice «command not found», cierra la terminal y ábrela de nuevo después de instalar.',
+        ])}
+      </li>
+      <li class="guia__paso revela" data-paso="2">
+        <h3 class="guia__titulo">Descarga el proyecto</h3>
+        <div class="comandos">${comando('Clónalo y entra a la carpeta', 'git clone https://github.com/Christopher-SDK/cuadre.git && cd cuadre', 'git clone https://github.com/Christopher-SDK/cuadre.git; cd cuadre')}</div>
+        <p class="guia__enlaces">¿Sin Git? <a href="${REPO}/archive/refs/heads/main.zip">Descarga el ZIP</a>, descomprímelo y abre una terminal dentro de la carpeta.</p>
+        ${respuesta(2, 'Sí, estoy dentro de la carpeta cuadre', [
+          '«git: command not found»: descarga el ZIP con el enlace de arriba.',
+          '«already exists»: ya lo descargaste antes; entra con <code>cd cuadre</code>.',
+          'Para comprobar que estás en el lugar correcto, debe existir el archivo <code>mvnw</code> en la carpeta.',
+        ])}
+      </li>
+      <li class="guia__paso revela" data-paso="3">
+        <h3 class="guia__titulo">Córrelo con el sistema correcto</h3>
+        <div class="comandos">${comando('La suite completa, sin bugs (~1 min; la primera vez tarda más porque descarga todo)', './mvnw verify')}</div>
+        <div class="espera"><p class="espera__rotulo">Deberías ver</p><pre class="espera__salida"><span>[INFO] Tests run: ${L_PRUEBAS}, Failures: 0, Errors: 0, Skipped: 0</span>
+<span class="ok">[INFO] BUILD SUCCESS</span></pre></div>
+        ${respuesta(3, 'Sí, BUILD SUCCESS', [
+          '«Could not find a valid Docker environment»: Docker Desktop no está abierto. Ábrelo y vuelve a correr el comando.',
+          '«release version 21 not supported»: Maven está usando otro Java. Vuelve al paso 1.',
+          '<span data-solo="unix">«permission denied: ./mvnw»: <code>chmod +x mvnw</code> y otra vez.</span><span data-solo="win">«no se reconoce ./mvnw»: en Windows es <code>.\\mvnw.cmd</code>; copia el comando con el botón.</span>',
+          'Si se queda descargando, es la primera vez: espera unos minutos.',
+          'Si ves fallas sin haber encendido ningún bug, eso no debería pasar: <a href="${REPO}/issues">abre un issue</a> con la salida.',
+        ])}
+      </li>
+      <li class="guia__paso revela" data-paso="4" id="enciende">
+        <h3 class="guia__titulo">Enciende un bug y mira cómo lo atrapan</h3>
+        <p class="guia__texto">Elige uno. El comando cambia solo. <code>-Dcuadre.bug=NOMBRE</code> es lo mismo que la variable <code>CUADRE_BUG=NOMBRE</code>: usa la que prefieras.</p>
+        <div class="chips guia__chips" role="group" aria-label="Elige el bug que quieres encender">
+          ${D.bugs.map((b, k) => `<button type="button" class="chip" data-guia-bug="${b.bug}" data-clase="${claseRapida(b.bug)}" data-slug="${SLUG[b.bug]}" data-titulo="${esc(b.titulo)}" data-cliente="${esc(b.cliente)}" data-tiempo="${RAPIDA[b.bug][0]}" data-falla="${RAPIDA[b.bug][1]}" aria-pressed="${k === 2}">${b.bug}</button>`).join('\n          ')}
+        </div>
+        <div class="guia__bug" aria-live="polite"><p><strong data-guia-titulo>${esc(D.bugs[2].titulo)}</strong> <span data-guia-cliente>${esc(D.bugs[2].cliente)}</span></p></div>
+        <div class="comandos">
+          ${comando('Prueba rápida: solo las pruebas que lo atrapan (<span data-guia-tiempo>' + RAPIDA[D.bugs[2].bug][0] + '</span>)', `./mvnw test -Dcuadre.bug=${D.bugs[2].bug} -Dtest=${claseRapida(D.bugs[2].bug)}`, null, 'data-guia="rapida"')}
+          ${comando('La suite completa con el bug encendido', `./mvnw test -Dcuadre.bug=${D.bugs[2].bug}`, null, 'data-guia="completa"')}
+        </div>
+        <div class="espera espera--falla"><p class="espera__rotulo">Deberías ver</p><pre class="espera__salida"><span>[ERROR] Failures:</span>
+<span>[ERROR]   <span data-guia-falla>${RAPIDA[D.bugs[2].bug][1]}</span>:…</span>
+<span class="mal">[INFO] BUILD FAILURE</span></pre>
+          <p class="espera__nota"><strong>Que falle es la prueba de que funciona:</strong> la suite atrapó el bug. Corre otra vez sin <code>-Dcuadre.bug</code> y vuelve a salir en verde. <a data-guia-ficha href="${B}bug/${SLUG[D.bugs[2].bug]}/">Ver el caso completo de este bug →</a></p>
+        </div>
+        ${respuesta(4, 'Sí, BUILD FAILURE: lo atrapó', [
+          'Si te salió BUILD SUCCESS, el bug no se encendió: copia el comando con el botón, que incluye <code>-Dcuadre.bug=…</code>.',
+          '«CUADRE_BUG desconocido»: el nombre debe ser uno de los 7, tal cual, en mayúsculas.',
+          'CARRERA tarda de 2 a 3 minutos y TIMEOUT_A_MEDIAS unos 15 s: espera a que termine.',
+          'Si ves «Could not find a valid Docker environment», Docker Desktop se cerró: ábrelo de nuevo.',
+        ])}
+        <p class="guia__logro" data-logro hidden></p>
+      </li>
+    </ol>
+    <div class="guia__extra revela">
+      <div class="comandos">${comando('Opcional · la matriz completa: limpio + los 7 bugs (~10–15 min, requiere python3; en Windows, desde Git Bash o WSL)', 'scripts/matriz.sh', 'bash scripts/matriz.sh')}</div>
+    </div>
+    <div class="ayuda revela">
+      <h3 class="guia__titulo">Si algo sale mal</h3>
+      ${[
+        ['<code>Could not find a valid Docker environment</code>', 'Docker Desktop no está abierto. Ábrelo, espera a que diga que está corriendo y vuelve a lanzar el comando.'],
+        ['<code>release version 21 not supported</code>', 'Maven está usando otro Java. Instala Java 21 y revisa que <code>java -version</code> diga 21.<span data-solo="unix"> En macOS, si tienes varios: <code>export JAVA_HOME=$(/usr/libexec/java_home -v 21)</code>.</span><span data-solo="win"> En Windows, reinstala Java 21 marcando «Set JAVA_HOME» y abre una terminal nueva.</span>'],
+        ['<code>permission denied: ./mvnw</code>', 'En macOS o Linux, dale permiso una vez: <code>chmod +x mvnw</code>. En Windows no aplica: usa <code>.\\mvnw.cmd</code>.'],
+        ['<code>CUADRE_BUG desconocido</code>', 'El nombre del bug no existe. Usa uno de los 7 de arriba, tal cual, en mayúsculas.'],
+        ['La primera corrida tarda varios minutos', 'Es normal: descarga Maven, las dependencias y la imagen de PostgreSQL. Las siguientes tardan alrededor de un minuto.'],
+      ].map(([q, a]) => `<details class="ayuda__item" name="ayuda"><summary>${q}</summary><p>${a}</p></details>`).join('\n      ')}
     </div>
     <div class="cierre revela">
       <a class="boton boton--primario boton--grande" href="${REPO}">Ver el código <span class="boton__igual" aria-hidden="true">=</span></a>
-      <p>Java 21 + Docker. <code>./mvnw verify</code> y en un minuto lo ves pasar.</p>
+      <p>¿Encontraste algo raro? <a href="${REPO}/issues">Abre un issue</a>: también es una prueba.</p>
     </div>
   </section>
 </main>
@@ -400,9 +510,14 @@ ${libro(b.bug, 'El libro con este bug', 'libro')}
   <section class="seccion seccion--corta envoltura" aria-labelledby="local-titulo">
     <div class="seccion__cab"><div>
       <h2 class="h2 revela" id="local-titulo">Reprodúcelo en tu máquina</h2>
-      <p class="intro revela">Java 21 y Docker en marcha.</p>
-    </div></div>
-    <div class="comandos"><div class="comando revela"><div class="comando__texto"><small>Toda la suite con este defecto activo</small><code>CUADRE_BUG=${b.bug} ./mvnw test</code></div><button class="copiar" type="button" data-copiar="CUADRE_BUG=${b.bug} ./mvnw test">Copiar</button></div></div>
+      <p class="intro revela">Java 21 y Docker abierto. Los comandos se adaptan a tu sistema.</p>
+    </div>
+    ${SELECTOR_SO}</div>
+    <div class="comandos">
+      ${comando('Prueba rápida: solo las pruebas que lo atrapan', `./mvnw test -Dcuadre.bug=${b.bug} -Dtest=${claseRapida(b.bug)}`)}
+      ${comando('Toda la suite con este bug encendido', `./mvnw test -Dcuadre.bug=${b.bug}`)}
+    </div>
+    <p class="guia__enlaces">Debe terminar en <code>BUILD FAILURE</code>: eso es la suite atrapándolo. ¿Primera vez? <a href="${B}#correr">Sigue la guía de 4 pasos</a>.</p>
   </section>
 
   <nav class="seccion seccion--corta envoltura vecinos" aria-label="Otros bugs">

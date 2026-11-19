@@ -255,7 +255,7 @@ code, pre { font-family: var(--mono); font-size: .92em; font-feature-settings: "
 .comando { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px 14px 14px 18px; border-radius: 14px; background: var(--superficie-2); border: 1px solid var(--linea); }
 .comando__texto { flex: 1; min-width: 0; }
 .comando__texto small { display: block; font: 400 .84rem var(--texto-f); color: var(--suave); margin-bottom: 2px; }
-.comando__texto code { display: block; overflow-wrap: anywhere; font-size: .95rem; color: var(--texto); scrollbar-width: thin; }
+.comando__texto code { display: block; font-size: .95rem; color: var(--texto); scrollbar-width: thin; }
 .copiar { flex: none; min-height: 40px; padding: 0 14px; border-radius: 9px; border: 1px solid var(--linea); background: var(--superficie); color: var(--texto); font: 500 .86rem var(--texto-f); cursor: pointer; transition: border-color .2s var(--entra); }
 .copiar:hover { border-color: var(--texto); }
 .cierre { display: flex; align-items: center; gap: 12px 24px; flex-wrap: wrap; margin-top: 40px; padding: 28px; border-radius: 22px; border: 1px solid var(--acento); background: var(--acento-fondo); }
@@ -416,3 +416,84 @@ a:not([class]):hover { color: var(--texto); text-decoration-thickness: 2px; }
 }
 @media (max-width: 460px) { .cifras > div:last-child { grid-column: 1 / -1; } }
 #matriz-cab th { vertical-align: bottom; }
+
+/* ------------------------------------------------------------------ guía «Pruébalo tú» */
+.guia__cab-seccion { align-items: end; }
+.so { display: inline-flex; padding: 4px; gap: 4px; border: 1px solid var(--linea); border-radius: 12px; background: var(--superficie); flex: none; }
+.so__boton { min-height: 40px; padding: 0 14px; border: 0; border-radius: 9px; background: none; color: var(--suave); font: 500 .9rem var(--texto-f); cursor: pointer; transition: background-color .2s var(--entra), color .2s var(--entra); }
+.so__boton:hover { color: var(--texto); }
+.so__boton[aria-pressed="true"] { background: var(--texto); color: var(--fondo); }
+.guia { margin: 0; padding: 0; list-style: none; counter-reset: guia; display: grid; gap: 0; }
+.guia__paso { counter-increment: guia; position: relative; display: grid; gap: 14px; padding: 28px 0 32px 64px; border-top: 1px solid var(--linea); }
+.guia__paso::before { content: counter(guia); position: absolute; left: 0; top: 26px; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: var(--acento-fondo); color: var(--acento); font: 700 1.1rem var(--display); }
+.guia__titulo { margin: 6px 0 0; font: 600 1.3rem/1.25 var(--display); letter-spacing: -.01em; }
+.guia__texto, .guia__enlaces { margin: 0; color: var(--suave); max-width: 68ch; }
+.guia__enlaces a, .espera__nota a, .cierre p a { color: var(--acento); }
+.guia__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.guia__bug p { margin: 0; padding: 14px 16px; border-radius: 12px; background: var(--superficie); border: 1px solid var(--linea); color: var(--suave); }
+.guia__bug strong { display: block; color: var(--texto); margin-bottom: 2px; }
+.espera { border-radius: 14px; border: 1px solid var(--acento); background: var(--acento-fondo); padding: 14px 18px; }
+.espera--falla { border-color: var(--alerta); background: var(--alerta-fondo); }
+.espera__rotulo { margin: 0 0 6px; font: 500 .74rem var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--suave); }
+.espera__salida { margin: 0; font: 400 .9rem/1.6 var(--mono); color: var(--texto); white-space: pre-wrap; overflow-wrap: anywhere; }
+.espera__salida .ok { color: var(--acento); font-weight: 500; }
+.espera__salida .mal { color: var(--alerta); font-weight: 500; }
+.espera__nota { margin: 12px 0 0; color: var(--texto); }
+.guia__extra { padding: 24px 0 0 64px; border-top: 1px solid var(--linea); }
+.ayuda { margin-top: 40px; display: grid; gap: 8px; }
+.ayuda .guia__titulo { margin-bottom: 8px; }
+.ayuda__item { border: 1px solid var(--linea); border-radius: 12px; background: var(--superficie); }
+.ayuda__item summary { cursor: pointer; padding: 14px 18px; font: 500 .95rem var(--mono); list-style-position: inside; }
+.ayuda__item summary:hover { color: var(--acento); }
+.ayuda__item p { margin: 0; padding: 0 18px 16px; color: var(--suave); }
+@media (max-width: 760px) {
+  .guia__cab-seccion { display: grid; gap: 20px; }
+  .guia__paso { padding-left: 0; padding-top: 76px; }
+  .guia__paso::before { top: 24px; }
+  .guia__extra { padding-left: 0; }
+  .so { width: 100%; } .so__boton { flex: 1; }
+}
+
+/* Guía interactiva: progreso, respuestas por paso y bugs atrapados. */
+.progreso { display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; margin-bottom: 8px; padding: 16px 18px; border: 1px solid var(--linea); border-radius: 14px; background: var(--superficie); }
+.progreso__barra { flex: 1 1 100%; height: 6px; border-radius: 999px; background: var(--linea); overflow: hidden; }
+.progreso__barra span { display: block; height: 100%; background: var(--acento); transform: scaleX(0); transform-origin: left; transition: transform .5s var(--entra); }
+.progreso__texto { margin: 0; color: var(--suave); }
+.progreso__texto strong { color: var(--texto); }
+.progreso__reiniciar { margin-left: auto; min-height: 36px; padding: 0 12px; border: 1px solid var(--linea); border-radius: 9px; background: none; color: var(--suave); font: 500 .86rem var(--texto-f); cursor: pointer; }
+.progreso__reiniciar:hover { color: var(--texto); border-color: var(--texto); }
+.guia__paso.hecho::before { content: '✓'; background: var(--acento); color: var(--sobre-acento); }
+.guia__paso.hecho .respuesta__pregunta::after { content: ' · listo'; color: var(--acento); }
+.respuesta { display: grid; gap: 10px; padding-top: 4px; }
+.respuesta__pregunta { margin: 0; font-weight: 600; }
+.respuesta__botones { display: flex; flex-wrap: wrap; gap: 8px; }
+.respuesta__boton { min-height: 44px; padding: 0 16px; font-size: .94rem; white-space: normal; text-align: left; }
+.respuesta__ayuda { padding: 14px 18px; border-radius: 12px; border: 1px dashed var(--linea); background: var(--superficie); }
+.respuesta__ayuda ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--texto); }
+.respuesta__ayuda a { color: var(--acento); }
+.guia__chips .chip.atrapado::after { content: ' ✓'; color: var(--acento); }
+.guia__chips .chip.atrapado[aria-pressed="true"]::after { color: inherit; }
+.guia__logro { margin: 0; padding: 14px 18px; border-radius: 12px; background: var(--acento-fondo); border: 1px solid var(--acento); color: var(--texto); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .progreso__barra span { transition: none; } }
+
+/* Comandos: se cortan solo entre argumentos, nunca dentro de un flag. */
+.arg { white-space: nowrap; }
+.arg--largo { white-space: normal; overflow-wrap: anywhere; }
+:root[data-so="win"] [data-solo="unix"], :root:not([data-so="win"]) [data-solo="win"] { display: none; }
+.comandos + .guia__enlaces { margin-top: 16px; }
+.ayuda__item summary { font: 500 .95rem var(--texto-f); }
+.ayuda__item summary code { font-size: .9em; }
+@media (max-width: 1100px) { .cab__nav a.ancla--media { display: none; } }
+@media (max-width: 760px) {
+  .guia__paso { padding-top: 26px; }
+  .guia__paso > .guia__titulo { min-height: 40px; display: flex; align-items: center; padding-left: 52px; margin-top: 0; }
+}
+@media (max-width: 460px) {
+  .comando { flex-wrap: wrap; }
+  .comando__texto { flex-basis: 100%; }
+  .comando .copiar { margin-left: auto; }
+  .comando__texto code { font-size: .88rem; }
+}
+.guia__texto code, .intro code, .espera__nota code, .guia__enlaces code { white-space: nowrap; }
+.so__boton[aria-pressed="true"]:hover { filter: brightness(1.18); }
+.guia__enlaces a:hover, .espera__nota a:hover, .respuesta__ayuda a:hover, .cierre p a:hover { color: var(--texto); text-decoration-thickness: 2px; }

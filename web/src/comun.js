@@ -73,6 +73,30 @@ export function odometro(el) {
   return caja;
 }
 
+// ---------------------------------------------------------------- comandos según el sistema operativo
+let so = /Windows/i.test(navigator.userAgent) ? 'win' : 'unix';
+try { so = localStorage.getItem('cuadre-so') || so; } catch (e) { /* sin almacenamiento: se usa la detección */ }
+export function aplicarSO(nuevo) {
+  if (nuevo) { so = nuevo; try { localStorage.setItem('cuadre-so', so); } catch (e) { /* idem */ } }
+  document.querySelectorAll('.comando[data-unix]').forEach((c) => {
+    const texto = c.dataset[so] || c.dataset.unix;
+    const code = c.querySelector('code');
+    code.textContent = '';
+    texto.split(' ').forEach((t, i) => {
+      if (i) code.append(' ');
+      const arg = document.createElement('span');
+      arg.className = t.length > 36 ? 'arg arg--largo' : 'arg';
+      arg.textContent = t;
+      code.append(arg);
+    });
+    c.querySelector('.copiar').dataset.copiar = texto;
+  });
+  document.documentElement.dataset.so = so;
+  document.querySelectorAll('.so__boton').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.so === so)));
+}
+document.querySelectorAll('.so__boton').forEach((b) => b.addEventListener('click', () => aplicarSO(b.dataset.so)));
+aplicarSO();
+
 // ---------------------------------------------------------------- copiar comandos
 document.querySelectorAll('.copiar').forEach((b) => {
   b.addEventListener('click', async () => {

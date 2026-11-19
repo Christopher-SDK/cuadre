@@ -1,5 +1,5 @@
 // Inicio: la ventana «=» (FIRMA-01), siembra un bug (FIRMA-02), la matriz que se enciende (FIRMA-03), cifras y videos.
-import { gsap, ScrollTrigger, observar, odometro, plural, segundos, reducido, pliegue, lenis } from './comun.js';
+import { gsap, ScrollTrigger, observar, odometro, plural, segundos, reducido, pliegue, lenis, aplicarSO } from './comun.js';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -72,7 +72,7 @@ const op = libro.querySelector('[data-op]');
 const veredicto = document.getElementById('veredicto');
 const vTexto = document.getElementById('veredicto-texto');
 const vTrazo = document.getElementById('veredicto-trazo');
-const chips = [...document.querySelectorAll('.chip')];
+const chips = [...document.querySelectorAll('.chip[data-bug]')];
 let actual = 'NINGUNO';
 
 function pintar(bug, animar) {
@@ -197,3 +197,72 @@ const y = Number(sessionStorage.getItem('cuadre-y'));
 if (performance.getEntriesByType('navigation')[0]?.type === 'back_forward' && y) {
   if (lenis) lenis.scrollTo(y, { immediate: true }); else scrollTo(0, y);
 }
+
+// ---------------------------------------------------------------- guía «Pruébalo tú»: el bug elegido arma sus comandos
+const aWin = (c) => c.replace(/\.\/mvnw\b/g, '.\\mvnw.cmd').replace(/ (-D[^ ]+)/g, ' "$1"');
+const fijar = (sel, unix) => { const c = document.querySelector(sel); c.dataset.unix = unix; c.dataset.win = aWin(unix); };
+document.querySelectorAll('[data-guia-bug]').forEach((chip) => chip.addEventListener('click', () => {
+  const { guiaBug: bug, clase, slug, titulo, cliente, tiempo, falla } = chip.dataset;
+  document.querySelectorAll('[data-guia-bug]').forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+  document.querySelector('[data-guia-titulo]').textContent = titulo;
+  document.querySelector('[data-guia-cliente]').textContent = cliente;
+  document.querySelector('[data-guia-falla]').textContent = falla;
+  document.querySelector('[data-guia-tiempo]').textContent = tiempo;
+  document.querySelector('[data-guia-ficha]').href = `${BASE}bug/${slug}/`;
+  fijar('[data-guia="rapida"]', `./mvnw test -Dcuadre.bug=${bug} -Dtest=${clase}`);
+  fijar('[data-guia="completa"]', `./mvnw test -Dcuadre.bug=${bug}`);
+  aplicarSO();
+}));
+
+// ---------------------------------------------------------------- guía interactiva: progreso, respuestas y bugs atrapados
+const GUIA = 'cuadre-guia';
+let estado = { hechos: [], atrapados: [] };
+try { estado = { ...estado, ...JSON.parse(localStorage.getItem(GUIA) || '{}') }; } catch (e) { /* sin almacenamiento: empieza de cero */ }
+const guardar = () => { try { localStorage.setItem(GUIA, JSON.stringify(estado)); } catch (e) { /* idem */ } };
+const pasosGuia = [...document.querySelectorAll('.guia__paso')];
+const logro = document.querySelector('[data-logro]');
+const reiniciar = document.querySelector('.progreso__reiniciar');
+
+function pintarGuia() {
+  pasosGuia.forEach((li) => li.classList.toggle('hecho', estado.hechos.includes(Number(li.dataset.paso))));
+  document.querySelectorAll('[data-guia-bug]').forEach((c) => c.classList.toggle('atrapado', estado.atrapados.includes(c.dataset.guiaBug)));
+  const n = estado.hechos.length, a = estado.atrapados.length;
+  document.querySelector('[data-progreso]').textContent = `${n} de 4 pasos listos`;
+  document.querySelector('[data-atrapados]').textContent = `${a} de 7 bugs atrapados por ti`;
+  document.querySelector('.progreso__barra span').style.transform = `scaleX(${(n + a / 7) / 5})`;
+  reiniciar.hidden = !n && !a;
+  logro.hidden = !a;
+  logro.textContent = a === 7
+    ? '¡Atrapaste los 7! Comprobaste en tu máquina lo mismo que la CI comprueba en cada cambio.'
+    : `¡Atrapado! Llevas ${a} de 7. Elige otro bug de la lista y repite.`;
+}
+
+function irA(el) {
+  const titulo = el.querySelector('.guia__titulo');
+  titulo.tabIndex = -1;
+  if (lenis) lenis.scrollTo(el, { offset: -90 }); else el.scrollIntoView({ behavior: reducido ? 'auto' : 'smooth', block: 'start' });
+  titulo.focus({ preventScroll: true });
+}
+
+document.querySelectorAll('.respuesta').forEach((r) => {
+  const paso = Number(r.dataset.paso);
+  const ayuda = r.querySelector('.respuesta__ayuda');
+  const no = r.querySelector('[data-respuesta="no"]');
+  r.querySelector('[data-respuesta="si"]').addEventListener('click', () => {
+    ayuda.hidden = true; no.setAttribute('aria-expanded', 'false');
+    if (!estado.hechos.includes(paso)) estado.hechos.push(paso);
+    if (paso === 4) {
+      const bug = document.querySelector('[data-guia-bug][aria-pressed="true"]').dataset.guiaBug;
+      if (!estado.atrapados.includes(bug)) estado.atrapados.push(bug);
+    }
+    guardar(); pintarGuia();
+    const siguiente = pasosGuia.find((li) => !estado.hechos.includes(Number(li.dataset.paso)));
+    if (paso < 4 && siguiente) irA(siguiente);
+  });
+  no.addEventListener('click', () => {
+    ayuda.hidden = !ayuda.hidden;
+    no.setAttribute('aria-expanded', String(!ayuda.hidden));
+  });
+});
+reiniciar.addEventListener('click', () => { estado = { hechos: [], atrapados: [] }; guardar(); pintarGuia(); irA(pasosGuia[0]); });
+pintarGuia();

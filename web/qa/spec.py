@@ -80,7 +80,7 @@ with sync_playwright() as p:
     # 5 · clic real en todos los botones del inicio
     pg.goto(U + '/#sembrar')
     pg.wait_for_timeout(800)
-    for chip in pg.locator('.chip').all():
+    for chip in pg.locator('.chip[data-bug]').all():
         bug = chip.get_attribute('data-bug')
         chip.click()
         pg.wait_for_timeout(250)
@@ -108,6 +108,48 @@ with sync_playwright() as p:
     pc.wait_for_timeout(100)
     check('«Reproducir otra vez» reinicia el caso', pc.locator('#pasos.reproduce').count() == 1)
     ctx.close()
+
+    # 5b · guía «Pruébalo tú»: sistema operativo y bug elegido arman el comando que se copia
+    ctx2 = b.new_context(viewport={'width': 1440, 'height': 900}, permissions=['clipboard-read', 'clipboard-write'])
+    pq = ctx2.new_page()
+    pq.goto(U + '/#correr')
+    pq.wait_for_timeout(600)
+    pq.click('.so__boton[data-so="unix"]')
+    for chip in pq.locator('[data-guia-bug]').all():
+        bug, clase = chip.get_attribute('data-guia-bug'), chip.get_attribute('data-clase')
+        chip.click()
+        cmd = pq.inner_text('[data-guia="rapida"] code')
+        ok = cmd == f'./mvnw test -Dcuadre.bug={bug} -Dtest={clase}' and chip.get_attribute('aria-pressed') == 'true'
+        check(f'guía arma el comando de {bug}', ok, cmd)
+    pq.click('.so__boton[data-so="win"]')
+    win = pq.inner_text('[data-guia="rapida"] code')
+    pq.click('[data-guia="rapida"] .copiar')
+    pq.wait_for_timeout(200)
+    copiado = pq.evaluate('navigator.clipboard.readText()')
+    check('guía en Windows usa mvnw.cmd y copia lo que se ve', win.startswith('.\\mvnw.cmd test "-Dcuadre.bug=') and copiado == win, win)
+    pq.reload()
+    pq.wait_for_timeout(600)
+    check('el sistema operativo elegido se recuerda', pq.get_attribute('.so__boton[data-so="win"]', 'aria-pressed') == 'true')
+    pq.goto(U + '/bug/carrera/')
+    pq.wait_for_timeout(500)
+    pq.goto(U + '/#correr'); pq.wait_for_timeout(500)
+    pq.evaluate("localStorage.removeItem('cuadre-guia')"); pq.reload(); pq.wait_for_timeout(600)
+    for n in (1, 2, 3):
+        pq.click(f'[data-paso="{n}"] [data-respuesta="si"]')
+    pq.click('[data-guia-bug="CRONOGRAMA"]')
+    pq.click('[data-paso="4"] [data-respuesta="si"]')
+    pq.click('[data-paso="3"] [data-respuesta="no"]')
+    ok = (pq.inner_text('[data-progreso]') == '4 de 4 pasos listos' and pq.inner_text('[data-atrapados]') == '1 de 7 bugs atrapados por ti'
+          and pq.is_visible('[data-paso="3"] .respuesta__ayuda') and pq.locator('.guia__paso.hecho').count() == 4
+          and 'atrapado' in pq.get_attribute('[data-guia-bug="CRONOGRAMA"]', 'class'))
+    check('guía interactiva: pasos, ayuda y bugs atrapados', ok, pq.inner_text('[data-progreso]') + ' · ' + pq.inner_text('[data-atrapados]'))
+    pq.reload(); pq.wait_for_timeout(600)
+    check('el progreso de la guía se recuerda', pq.locator('.guia__paso.hecho').count() == 4)
+    pq.click('.progreso__reiniciar'); pq.wait_for_timeout(200)
+    check('«Empezar de nuevo» limpia el progreso', pq.locator('.guia__paso.hecho').count() == 0 and pq.inner_text('[data-atrapados]').startswith('0 de 7'))
+    pq.goto(U + '/bug/carrera/'); pq.wait_for_timeout(500)
+    check('las fichas respetan el sistema operativo', pq.inner_text('.comando code').startswith('.\\mvnw.cmd'), pq.inner_text('.comando code'))
+    ctx2.close()
 
     # 6 · matriz: enfocar un bug con teclado enciende sus capas
     pg.goto(U + '/#matriz')

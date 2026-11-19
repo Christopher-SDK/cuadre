@@ -50,13 +50,17 @@ No hace falta instalar Maven: el repositorio trae el wrapper `mvnw`.
 ```bash
 git clone https://github.com/Christopher-SDK/cuadre.git && cd cuadre
 
-./mvnw verify                          # suite completa contra el sistema limpio (~1 min)
-CUADRE_BUG=REDONDEO ./mvnw test        # la misma suite con un defecto activado: debe fallar
+./mvnw verify                                          # suite completa contra el sistema limpio (~1 min)
+./mvnw test -Dcuadre.bug=REDONDEO -Dtest=CasosDoradosTest  # prueba rápida: un bug encendido, debe fallar en segundos
+./mvnw test -Dcuadre.bug=REDONDEO                      # la suite completa con ese bug: debe fallar
 scripts/matriz.sh                      # limpio + los 7 bugs → tabla y datos de la web (~10-15 min, requiere python3)
 scripts/matriz.sh CRONOGRAMA CARRERA   # solo algunos
 ```
 
-En Windows usa `mvnw.cmd` y `set CUADRE_BUG=REDONDEO` (o PowerShell: `$env:CUADRE_BUG="REDONDEO"`).
+Los 7 bugs ya vienen en el código, apagados: no hay que subir ni configurar nada. `-Dcuadre.bug=<NOMBRE>` (o la
+variable `CUADRE_BUG`) enciende uno solo para esa corrida. En Windows (PowerShell): `.\mvnw.cmd verify` y
+`.\mvnw.cmd test "-Dcuadre.bug=REDONDEO"`. La [guía de la página](https://christopher-sdk.github.io/cuadre/#correr)
+arma el comando de cada bug y dice qué deberías ver.
 La matriz completa también corre en GitHub Actions, un job por bug.
 
 Para levantar la API con su base de datos:
